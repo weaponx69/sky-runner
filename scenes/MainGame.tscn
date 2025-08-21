@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://cngl1lob1i0my"]
+
+[ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
+
+[node name="MainGame" type="Node2D"]
+
+[node name="Angel" parent="." instance=ExtResource("1_xej52")]
+
+[node name="Camera2D" type="Camera2D" parent="Angel"]

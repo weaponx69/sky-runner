@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://cv7gq0ipmdfww"]
+
+[ext_resource type="Texture2D" uid="uid://b5amtrbhu5hdv" path="res://icon.svg" id="1_1aybk"]
+[ext_resource type="Script" uid="uid://dps3km6lfla2h" path="res://scripts/Angel.gd" id="1_nvp8c"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_nvp8c"]
+size = Vector2(32, 32)
+
+[node name="Angel" type="CharacterBody2D"]
+script = ExtResource("1_nvp8c")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_1aybk")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_nvp8c")
