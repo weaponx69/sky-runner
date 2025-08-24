@@ -30,12 +30,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
 [node name="Orb1" parent="." instance=ExtResource("2_p73vr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -10)
+visible = false
 
 [node name="Orb2" parent="." instance=ExtResource("2_p73vr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -100)
+visible = false
 
 [node name="Orb3" parent="." instance=ExtResource("2_p73vr")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -50)
+visible = false
 
 [node name="OrbGenerator" type="Node3D" parent="."]
 script = ExtResource("2_xej52")
