@@ -1,14 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://cv7gq0ipmdfww"]
+[gd_scene load_steps=4 format=3 uid="uid://cv7gq0ipmdfww"]
 
-[ext_resource type="Script" uid="uid://dqblj4pvxekn5" path="res://scripts/LevelGenerator.gd" id="1_1aybk"]
 [ext_resource type="Script" uid="uid://dps3km6lfla2h" path="res://scripts/Angel.gd" id="1_cqiqw"]
-[ext_resource type="PackedScene" uid="uid://du5f2i8etn5le" path="res://scenes/Orb3D.tscn" id="2_nvp8c"]
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_tlrrg"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_tlrrg"]
 
 [node name="Angel" type="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 50)
 script = ExtResource("1_cqiqw")
 
 [node name="PlayerMesh" type="MeshInstance3D" parent="."]
@@ -26,9 +25,5 @@ spring_length = 16.0
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 current = true
-
-[node name="OrbGenerator" type="Node3D" parent="."]
-script = ExtResource("1_1aybk")
-orb_scene = ExtResource("2_nvp8c")
 
 [node name="@Node3D@57078" type="Node3D" parent="."]
