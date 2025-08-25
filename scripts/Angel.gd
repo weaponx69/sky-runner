@@ -4,7 +4,11 @@ extends CharacterBody3D
 @export var speed: float = 8.0
 @export var strafe_speed: float = 5.0
 @export var mouse_sensitivity: float = 0.002
+@export var boost_speed: float = 25.0
 
+@onready var player_mesh = $PlayerMesh
+@export var sway_max_x: float = 0.5
+@export var sway_speed: float = 10.0
 var pitch: float = 0.0
 
 func _ready():
@@ -31,8 +35,14 @@ func _unhandled_input(event):
 func _physics_process(delta: float) -> void:
 	# Constant speed straight down the world -Z axis
 	velocity = Vector3(0, 0, -speed)
+	# Visual sway/lean for the player mesh based on left/right input
+	var sway_input = Input.get_axis("ui_left", "ui_right")
+	var target_pos_x = sway_input * sway_max_x
+	player_mesh.position.x = lerp(player_mesh.position.x, target_pos_x, sway_speed * delta)
 	move_and_slide()
-	
+func apply_boost(direction):
+	# Set the player's velocity directly for an immediate forward push
+	velocity = direction * boost_speed
 func _input(event):
 	if event.is_action_pressed("ui_cancel"):
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)

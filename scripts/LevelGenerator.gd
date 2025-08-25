@@ -1,3 +1,4 @@
+# res://scripts/LevelGenerator.gd
 # Replace file content: res://scripts/LevelGenerator.gd
 extends Node3D
 
@@ -17,7 +18,7 @@ func _ready():
 		
 		var spawn_position = Vector3(
 			cos(random_angle) * random_distance,
-			1.0,
+		0.0,
 			sin(random_angle) * random_distance
 		)
 
