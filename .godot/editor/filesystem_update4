@@ -1,0 +1,6 @@
+res://node_3d.tscn
+res://scenes/Angel.tscn
+res://scenes/GameOver.tscn
+res://scenes/MainGame.tscn
+res://scenes/Orb3D.tscn
+res://scripts/Angel.gd

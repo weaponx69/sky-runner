@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
-[ext_resource type="PackedScene" uid="uid://du5f2i8etn5le" path="res://scenes/Orb3D.tscn" id="2_p73vr"]
+[ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_p73vr"]
 [ext_resource type="Script" uid="uid://dqblj4pvxekn5" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hat22"]

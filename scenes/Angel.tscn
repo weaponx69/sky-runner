@@ -7,7 +7,6 @@
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_tlrrg"]
 
 [node name="Angel" type="CharacterBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 50)
 script = ExtResource("1_cqiqw")
 
 [node name="PlayerMesh" type="MeshInstance3D" parent="."]
@@ -23,7 +22,6 @@ transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 
 spring_length = 16.0
 
 [node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 current = true
 
 [node name="@Node3D@57078" type="Node3D" parent="."]

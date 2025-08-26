@@ -37,8 +37,11 @@ func _physics_process(delta: float) -> void:
 	velocity.y = 0
 	# 2. Set the constant forward movement.
 	velocity.z = -speed
+	# 2.5 Handle horizontal input (A/D)
+	var input_dir = Input.get_axis("ui_left", "ui_right")
+	velocity.x = input_dir * strafe_speed
 	# 3. Handle the visual sway for the mesh based on left/right input.
-	var sway_input = Input.get_axis("ui_left", "ui_right")
+	var sway_input = input_dir
 	var target_pos_x = sway_input * sway_max_x
 	player_mesh.position.x = lerp(player_mesh.position.x, target_pos_x, sway_speed * delta)
 	# 4. Apply the final movement and handle collisions.
