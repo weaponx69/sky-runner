@@ -13,6 +13,7 @@ emission_energy_multiplier = 0.5
 [sub_resource type="SphereShape3D" id="SphereShape3D_1qv1b"]
 
 [node name="Orb" type="Area3D"]
+collision_layer = 0
 script = ExtResource("1_x1xs3")
 
 [node name="OrbMesh" type="MeshInstance3D" parent="."]
