@@ -15,7 +15,10 @@ var segment_length: float = 150.0
 var curve_amplitude: float = 7.0
 var orb_spacing: float = 3.0
 var generation_ahead_distance: float = 400.0
+var path_width: float = 4.0
+var path_height: float = 2.0
 # --------------------
+var rng = RandomNumberGenerator.new()
 
 func _ready():
 	# Find Path3D automatically, assuming it's a sibling node
@@ -87,29 +90,39 @@ func generate_path_segment(start_distance: float, length: float):
 func spawn_orbs_on_path():
 	if not curve or curve.point_count < 2:
 		return
-
 	var spawn_start = last_spawn_distance
 	var spawn_end = generated_distance
 	
 	if spawn_end <= spawn_start:
 		return
-
+	
+	# Temporary PathFollow3D to compute offsets
+	var temp_follower = PathFollow3D.new()
+	path3d.add_child(temp_follower)
+	var path_length = curve.get_baked_length()
 	var distance = spawn_start
 	while distance < spawn_end:
-		# Ensure we don't try to sample beyond the baked curve length
-		if distance >= curve.get_baked_length():
+		if distance >= path_length:
 			break
-			
-		var position = curve.sample_baked(distance)
-		
+		# Pick a random horizontal offset within the configured path width
+		var half_width = path_width / 2.0
+		var random_h_offset = rng.randf_range(-half_width, half_width)
+		# Pick a random vertical offset within the configured path height
+		var half_height = path_height / 2.0
+		var random_v_offset = rng.randf_range(-half_height, half_height)
+		# Position the follower and read its global position
+		temp_follower.progress = distance
+		temp_follower.h_offset = random_h_offset
+		temp_follower.v_offset = random_v_offset
+		var position = temp_follower.global_position
 		var orb = get_orb_from_pool()
 		if orb:
 			orb.global_position = position
 			active_orbs.append(orb)
-		
 		distance += orb_spacing
-
+	
 	last_spawn_distance = spawn_end
+	temp_follower.queue_free()
 
 func cleanup_old_orbs(cleanup_progress: float):
 	var orbs_to_remove = []
