@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
-[ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_p73vr"]
 [ext_resource type="Script" uid="uid://dqblj4pvxekn5" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
+[ext_resource type="Script" uid="uid://w0hpjrww4vgc" path="res://scripts/PlayerPathFollow.gd" id="3_p73vr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hat22"]
 
@@ -25,8 +25,13 @@ shadow_bias = 0.2
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_hat22")
 
-[node name="Angel" parent="." instance=ExtResource("1_xej52")]
-
 [node name="OrbGenerator" type="Node3D" parent="."]
 script = ExtResource("2_xej52")
-orb_scene = ExtResource("2_p73vr")
+
+[node name="Path3D" type="Path3D" parent="."]
+
+[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D"]
+script = ExtResource("3_p73vr")
+
+[node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
+script = ""
