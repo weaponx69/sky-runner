@@ -10,10 +10,11 @@ emission_energy_multiplier = 0.5
 
 [sub_resource type="SphereMesh" id="SphereMesh_1qv1b"]
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_1qv1b"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_x1xs3"]
+radius = 1.0
 
 [node name="Orb" type="Area3D"]
-collision_layer = 0
+collision_layer = 2
 script = ExtResource("1_x1xs3")
 
 [node name="OrbMesh" type="MeshInstance3D" parent="."]
@@ -21,4 +22,4 @@ material_override = SubResource("StandardMaterial3D_1qv1b")
 mesh = SubResource("SphereMesh_1qv1b")
 
 [node name="OrbCollision" type="CollisionShape3D" parent="."]
-shape = SubResource("SphereShape3D_1qv1b")
+shape = SubResource("SphereShape3D_x1xs3")

@@ -1,4 +1,4 @@
-extends Area2D
+extends Area3D
 
 func _ready():
 	# Add to orbs group

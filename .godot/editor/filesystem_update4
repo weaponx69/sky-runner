@@ -1,7 +1,5 @@
-res://scenes/MainGame.tscn
-res://scripts/LevelGenerator.gd
-res://node_3d.tscn
 res://scenes/Angel.tscn
-res://scenes/GameOver.tscn
-res://scenes/Orb3D.tscn
 res://scripts/Angel.gd
+res://scenes/MainGame.tscn
+res://scenes/Orb3D.tscn
+res://scripts/PlayerPathFollow.gd

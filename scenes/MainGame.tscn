@@ -25,8 +25,9 @@ shadow_bias = 0.2
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_hat22")
 
-[node name="OrbGenerator" type="Node3D" parent="."]
+[node name="OrbGenerator" type="Node3D" parent="." node_paths=PackedStringArray("player_path_follow")]
 script = ExtResource("2_xej52")
+player_path_follow = NodePath("../Path3D/PlayerPathFollow")
 
 [node name="Path3D" type="Path3D" parent="."]
 
@@ -35,3 +36,14 @@ script = ExtResource("3_p73vr")
 
 [node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
 script = ""
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="SpeedLabel" type="Label" parent="CanvasLayer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -100.0
+offset_top = 20.0
+offset_right = -100.0
+offset_bottom = 43.0
+horizontal_alignment = 2

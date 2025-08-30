@@ -15,6 +15,11 @@ run/main_scene="uid://cngl1lob1i0my"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
+[editor]
+
+version_control/plugin_name="GitPlugin"
+version_control/autoload_on_startup=true
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gamedev_assistant/plugin.cfg")
@@ -35,3 +40,7 @@ ui_right={
 , Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":0,"axis_value":1.0,"script":null)
 ]
 }
+
+[physics]
+
+common/physics_jitter_fix=1.0
