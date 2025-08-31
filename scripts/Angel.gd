@@ -8,9 +8,9 @@ extends Area3D
 # This prevents two scripts from fighting for control.
 
 func _process(_delta):
-	# We can leave this function empty or use 'pass'.
-	pass
+    # We can leave this function empty or use 'pass'.
+    pass
 
 func _physics_process(_delta):
-	# We should also ensure the physics process is empty.
-	pass
+    # We should also ensure the physics process is empty.
+    pass

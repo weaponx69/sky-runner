@@ -7,4 +7,4 @@ extends SpringArm3D
 # All camera settings should be adjusted in the Inspector.
 
 func _process(_delta):
-	pass
+    pass
