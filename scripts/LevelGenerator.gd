@@ -1,5 +1,6 @@
 # res://scripts/LevelGenerator.gd
 # Edit file: res://scripts/LevelGenerator.gd
+# NOTE: Removed 'async' keyword from generate_path_segment; use 'await' within the function instead.
 extends Node3D
 
 @export var player_path_follow: PathFollow3D
