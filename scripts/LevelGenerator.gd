@@ -61,44 +61,35 @@ func generate_path_segment(start_distance: float, length: float):
     if curve.point_count > 0:
         start_point = curve.get_point_position(curve.point_count - 1)
     else:
-        # For the very first point, we don't need handles
         curve.add_point(Vector3.ZERO)
     
     var last_point = start_point
-    # Use a fixed number of points per segment for consistency
-    var points_to_add = 25
+    var points_to_add = 10  # Sweet spot: 10 points for smooth curves
     var step_z = length / float(points_to_add)
     
     for i in range(1, points_to_add + 1):
         var progress = start_distance + (i * step_z)
-    
-        # Calculate offsets based on overall progress
+
         var x_offset = sin(progress * 0.05) * curve_amplitude
         var y_offset = cos(progress * 0.08) * (curve_amplitude * 0.5)
-        
-        # Calculate the new point relative to the segment's start point
-        # This is more stable than adding to the previous point
+
         var new_point = start_point + Vector3(x_offset, y_offset, -i * step_z)
-    
-        # Create smooth handles for the curve
+
+        # Smooth handle calculation - this is what matters for smoothness
         var dir = (new_point - last_point).normalized()
-        var handle_length = step_z * 0.5 # Consistent handle length
-        var in_handle = -dir * handle_length
-        var out_handle = dir * handle_length
-    
-        # THE FIX: The last argument must be -1 to APPEND to the end of the curve.
-        # Using 0 inserts at the beginning, which was causing the jitter.
-        curve.add_point(new_point, in_handle, out_handle, -1)
-        
+        var handle_length = step_z * 0.4  # Slightly longer for smoother curves
+
+        curve.add_point(new_point, -dir * handle_length, dir * handle_length, -1)
+
         last_point = new_point
-    
+
     generated_distance = start_distance + length
-    # A smaller bake interval creates a smoother path for the follower
-    curve.bake_interval = 0.05
+    curve.bake_interval = 0.15
 func spawn_orbs_on_path():
     if not curve or curve.point_count < 2:
         return
-    var spawn_start = last_spawn_distance
+    
+    var spawn_start = max(last_spawn_distance, 0)
     var spawn_end = generated_distance
     
     if spawn_end <= spawn_start:
@@ -106,12 +97,11 @@ func spawn_orbs_on_path():
     
     var temp_follower = PathFollow3D.new()
     path3d.add_child(temp_follower)
+    
     var path_length = curve.get_baked_length()
     var distance = spawn_start
-    while distance < spawn_end:
-        if distance >= path_length:
-            break
-        
+    
+    while distance < spawn_end and distance < path_length:
         var half_width = path_width / 2.0
         var random_h_offset = rng.randf_range(-half_width, half_width)
         var half_height = path_height / 2.0
@@ -126,6 +116,7 @@ func spawn_orbs_on_path():
         if orb:
             orb.global_position = position
             active_orbs.append(orb)
+        
         distance += orb_spacing
     
     last_spawn_distance = spawn_end
