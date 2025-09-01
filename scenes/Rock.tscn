@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://be750v2kqnyrj"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5md23"]
+albedo_color = Color(0.5, 0.5, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5md23"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_5md23"]
+
+[node name="Rock" type="StaticBody3D"]
+
+[node name="RockMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("StandardMaterial3D_5md23")
+mesh = SubResource("BoxMesh_5md23")
+
+[node name="RockCollision" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_5md23")

@@ -9,3 +9,4 @@ res://scripts/Orb.gd
 res://scripts/PlayerPathFollow.gd
 res://scripts/SmoothCamera.gd
 res://scripts/UI.gd
+res://scenes/Rock.tscn
