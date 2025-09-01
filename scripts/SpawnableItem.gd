@@ -1,3 +1,4 @@
+# res://scripts/SpawnableItem.gd
 extends Resource
 class_name SpawnableItem
 
@@ -9,3 +10,7 @@ class_name SpawnableItem
 @export var radius_min: float = 5.0
 ## Maximum distance from the path to spawn.
 @export var radius_max: float = 10.0
+
+@export_group("Sizing")
+@export var scale_min: float = 1.0
+@export var scale_max: float = 1.0

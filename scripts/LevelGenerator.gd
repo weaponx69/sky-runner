@@ -4,6 +4,22 @@ extends Node3D
 
 @export var player_path_follow: PathFollow3D
 
+@export_group("Player Spacing")
+# Drag your Angel.tscn file here in the Inspector
+@export var player_scene: PackedScene
+@export var safety_margin: float = 1.0
+
+@export_group("Path Generation")
+@export var generation_ahead_distance: float = 200.0
+@export var segment_length: float = 5.0
+@export var curve_amplitude: float = 10.0
+
+@export_group("Item Spawning")
+@export var item_spacing: float = 15.0
+
+# Internal runtime helpers
+var rng = RandomNumberGenerator.new()
+var noise = FastNoiseLite.new()
 @export_group("Spawnables")
 ## Drag your 'rock_item.tres' and other obstacle resources here.
 @export var obstacle_items: Array[SpawnableItem]
@@ -21,14 +37,8 @@ var active_items: Array = []
 var orb_pool: Array = []
 var last_spawn_distance: float = 0.0
 
-# --- Configuration ---
-var segment_length: float = 150.0
-var curve_amplitude: float = 7.0
-var item_spacing: float = 1.0
-var generation_ahead_distance: float = 400.0
-# --------------------
-var rng = RandomNumberGenerator.new()
-var noise = FastNoiseLite.new()
+# We'll store the calculated player width here (fallback default)
+var player_width: float = 2.0
 
 func _ready():
     # Configure the noise for generating obstacle patterns
@@ -36,6 +46,27 @@ func _ready():
     noise.seed = rng.randi()
     noise.noise_type = FastNoiseLite.TYPE_PERLIN
     noise.frequency = 0.02
+
+    # Calculate player width automatically from the provided player scene (if set)
+    if player_scene:
+        var player_instance = player_scene.instantiate()
+        # Try to find a named mesh node first, then fall back to the first MeshInstance3D child
+        var mesh_instance = player_instance.get_node_or_null("PlayerMesh")
+        if not mesh_instance:
+            for c in player_instance.get_children():
+                if c is MeshInstance3D:
+                    mesh_instance = c
+                    break
+        if mesh_instance and mesh_instance is MeshInstance3D:
+            var aabb_size = mesh_instance.get_aabb().size
+            # Assume width is along the X axis
+            player_width = aabb_size.x
+            print("Calculated player width:", player_width)
+        else:
+            push_warning("Could not find 'PlayerMesh' in the player scene to calculate width.")
+        player_instance.queue_free()
+    else:
+        push_warning("Player Scene is not set in the LevelGenerator. Cannot calculate width for spacing.")
 
     path3d = get_parent().get_node("Path3D")
     if not path3d:
@@ -82,7 +113,7 @@ func generate_path_segment(start_distance: float, length: float):
         var progress = start_distance + (i * step_z)
 
         var x_offset = sin(progress * 0.05) * curve_amplitude
-        var y_offset = cos(progress * 0.08) * (curve_amplitude * 0.5)
+        var y_offset = 0.0
 
         var new_point = start_point + Vector3(x_offset, y_offset, -i * step_z)
 
@@ -111,36 +142,60 @@ func spawn_items_on_path():
     path3d.add_child(temp_follower)
 
     var path_length = curve.get_baked_length()
+    # The minimum spacing between obstacles is the player's width plus a safety margin.
+    var min_spacing_for_obstacles = player_width + safety_margin
+    # A smaller, regular distance to check for orb spawns.
+    var orb_check_step = 5.0
+
     var distance = spawn_start
 
     while distance < spawn_end and distance < path_length:
         temp_follower.progress = distance
 
-        # Decide obstacle placement using noise (-1..1)
+        # 1. Decide if we spawn an obstacle at this location.
         var noise_val = noise.get_noise_1d(distance)
         if noise_val > 0.1:
             var item_to_spawn = _get_random_obstacle_item()
             if item_to_spawn:
                 _spawn_item(temp_follower, item_to_spawn)
+                # If we spawned an obstacle, jump forward by the large safe distance.
+                distance += min_spacing_for_obstacles + rng.randf_range(0.0, 5.0)
+                # Skip orb spawn at the same position.
+                continue
 
-        # Independent orb spawn chance
+        # 2. If we didn't spawn an obstacle, check for an orb.
         if rng.randf() < orb_spawn_chance:
             _spawn_orb(temp_follower)
 
-        distance += item_spacing
+        # 3. Always advance by a small, consistent step to allow frequent orb checks.
+        distance += orb_check_step
 
     last_spawn_distance = spawn_end
     temp_follower.queue_free()
-
 func _spawn_item(follower: PathFollow3D, item_data: SpawnableItem):
     if not item_data or not item_data.scene:
         push_error("Attempting to spawn null item or item with null scene!")
         return
+    
     var random_angle = rng.randf_range(0, TAU)
     var random_radius = rng.randf_range(item_data.radius_min, item_data.radius_max)
+
     follower.h_offset = cos(random_angle) * random_radius
-    follower.v_offset = sin(random_angle) * random_radius
+    follower.v_offset = 0.0
+
     var new_item = item_data.scene.instantiate()
+    
+    if item_data.scale_min < item_data.scale_max:
+        var random_scale = rng.randf_range(item_data.scale_min, item_data.scale_max)
+        new_item.scale = Vector3(random_scale, random_scale, random_scale)
+
+    # --- THIS IS THE CORRECTED LINE ---
+    # We connect the signal directly to the method. This is the modern Godot 4 way.
+    if new_item.has_signal("player_collided"):
+        if is_instance_valid(player_path_follow):
+            new_item.player_collided.connect(player_path_follow._on_obstacle_collision)
+    # ------------------------------------
+
     add_child(new_item)
     new_item.global_position = follower.global_position
     active_items.append(new_item)
@@ -150,7 +205,7 @@ func _spawn_orb(follower: PathFollow3D):
     var random_radius = rng.randf_range(orb_circle_radius_min, orb_circle_radius_max)
 
     follower.h_offset = cos(random_angle) * random_radius
-    follower.v_offset = sin(random_angle) * random_radius
+    follower.v_offset = 0.0
 
     var orb = get_orb_from_pool()
     if orb:
@@ -206,14 +261,17 @@ func get_orb_from_pool() -> Area3D:
         add_child(orb)
 
     if orb.has_signal("collected"):
-        if orb.collected.is_connected(_on_orb_collected):
-            orb.collected.disconnect(_on_orb_collected)
-        orb.collected.connect(_on_orb_collected)
+        var orb_callable = Callable(self, "_on_orb_collected")
+        if orb.collected.is_connected(orb_callable):
+            orb.collected.disconnect(orb_callable)
+        orb.collected.connect(orb_callable)
     return orb
 
 func _on_orb_collected(orb: Area3D):
-    if orb.has_signal("collected") and orb.collected.is_connected(_on_orb_collected):
-        orb.collected.disconnect(_on_orb_collected)
+    if orb.has_signal("collected"):
+        var orb_callable = Callable(self, "_on_orb_collected")
+        if orb.collected.is_connected(orb_callable):
+            orb.collected.disconnect(orb_callable)
 
     if is_instance_valid(player_path_follow) and player_path_follow.has_method("add_speed_boost"):
         player_path_follow.add_speed_boost()

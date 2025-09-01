@@ -36,6 +36,7 @@ obstacle_items = Array[ExtResource("2_t4bxf")]([ExtResource("3_x628s")])
 
 [node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D"]
 script = ExtResource("3_p73vr")
+friction = 0.5
 
 [node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
 

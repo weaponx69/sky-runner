@@ -7,3 +7,5 @@ res://scenes/MainGame.tscn
 res://resources/rock_item.tres
 res://scripts/PlayerPathFollow.gd
 res://scripts/LevelGenerator.gd
+res://scripts/Rock.gd
+res://scripts/SpawnableItem.gd
