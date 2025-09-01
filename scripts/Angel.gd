@@ -23,8 +23,8 @@ func _physics_process(delta):
     var input_vector = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
     # If there's any input, print it to the console.
-    if input_vector != Vector2.ZERO:
-        print("Input detected: ", input_vector)
+    #if input_vector != Vector2.ZERO:
+        #print("Input detected: ", input_vector)
 
     # 2. Update the parent's offsets.
     parent_path_follow.h_offset += input_vector.x * horizontal_speed * delta
