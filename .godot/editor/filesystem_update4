@@ -1,12 +1,9 @@
 res://scenes/Orb3D.tscn
 res://scripts/Angel.gd
+res://scripts/RockItem.gd
 res://scenes/Angel.tscn
-res://scenes/MainGame.tscn
-res://scripts/LevelGenerator.gd
-res://scripts/GameOver.gd
-res://scripts/Orb3D.gd
-res://scripts/Orb.gd
-res://scripts/PlayerPathFollow.gd
-res://scripts/SmoothCamera.gd
-res://scripts/UI.gd
 res://scenes/Rock.tscn
+res://scenes/MainGame.tscn
+res://resources/rock_item.tres
+res://scripts/PlayerPathFollow.gd
+res://scripts/LevelGenerator.gd

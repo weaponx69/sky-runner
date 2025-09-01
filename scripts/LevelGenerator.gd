@@ -24,7 +24,7 @@ var last_spawn_distance: float = 0.0
 # --- Configuration ---
 var segment_length: float = 150.0
 var curve_amplitude: float = 7.0
-var item_spacing: float = 10.0
+var item_spacing: float = 1.0
 var generation_ahead_distance: float = 400.0
 # --------------------
 var rng = RandomNumberGenerator.new()
@@ -118,7 +118,7 @@ func spawn_items_on_path():
 
         # Decide obstacle placement using noise (-1..1)
         var noise_val = noise.get_noise_1d(distance)
-        if noise_val > 0.3:
+        if noise_val > 0.1:
             var item_to_spawn = _get_random_obstacle_item()
             if item_to_spawn:
                 _spawn_item(temp_follower, item_to_spawn)
@@ -133,12 +133,13 @@ func spawn_items_on_path():
     temp_follower.queue_free()
 
 func _spawn_item(follower: PathFollow3D, item_data: SpawnableItem):
+    if not item_data or not item_data.scene:
+        push_error("Attempting to spawn null item or item with null scene!")
+        return
     var random_angle = rng.randf_range(0, TAU)
     var random_radius = rng.randf_range(item_data.radius_min, item_data.radius_max)
-
     follower.h_offset = cos(random_angle) * random_radius
     follower.v_offset = sin(random_angle) * random_radius
-
     var new_item = item_data.scene.instantiate()
     add_child(new_item)
     new_item.global_position = follower.global_position
@@ -159,17 +160,23 @@ func _spawn_orb(follower: PathFollow3D):
 func _get_random_obstacle_item() -> SpawnableItem:
     if obstacle_items.is_empty():
         return null
-
+    # Filter out items with null scenes
+    var valid_items = []
+    for item in obstacle_items:
+        if item and item.scene:
+            valid_items.append(item)
+    if valid_items.is_empty():
+        push_warning("No valid obstacle items found - all have null scenes!")
+        return null
     var total_weight = 0.0
-    for item in obstacle_items:
+    for item in valid_items:
         total_weight += item.weight
-
     var random_val = rng.randf() * total_weight
-    for item in obstacle_items:
+    for item in valid_items:
         if random_val < item.weight:
             return item
         random_val -= item.weight
-    return null
+    return valid_items[-1]
 
 func cleanup_old_items(cleanup_progress: float):
     var remaining = []

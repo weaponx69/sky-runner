@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="SpawnableItem" load_steps=3 format=3 uid="uid://c1t3dv785gmti"]
+
+[ext_resource type="Script" uid="uid://imk0a517n8ir" path="res://scripts/SpawnableItem.gd" id="1_1ht57"]
+[ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="1_bckco"]
+
+[resource]
+script = ExtResource("1_1ht57")
+scene = ExtResource("1_bckco")
+weight = 11.0
+radius_min = 5.0
+radius_max = 40.0
+metadata/_custom_type_script = "uid://imk0a517n8ir"

@@ -24,4 +24,4 @@ func _physics_process(delta):
 func add_speed_boost():
     # Boost only affects the temporary current_speed.
     current_speed += boost_amount
-    print("Speed boosted! New speed: ", current_speed)
+    #print("Speed boosted! New speed: ", current_speed)
