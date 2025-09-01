@@ -14,10 +14,6 @@ func _ready():
     area_entered.connect(_on_area_entered)
 func _on_area_entered(area):
     if area.is_in_group("player"):
-        var player_path_follow = area.get_parent()
-        
-        if player_path_follow and player_path_follow.has_method("add_speed_boost"):
-            player_path_follow.add_speed_boost()
-        
+        # Notify the LevelGenerator (or any listener) that we've been collected.
+        # Do not free or hide ourselves here; pooling is handled externally.
         collected.emit(self)
-        queue_free()

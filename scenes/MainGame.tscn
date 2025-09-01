@@ -35,7 +35,6 @@ player_path_follow = NodePath("../Path3D/PlayerPathFollow")
 script = ExtResource("3_p73vr")
 
 [node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
-script = ""
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

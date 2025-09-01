@@ -136,12 +136,45 @@ func cleanup_old_orbs(cleanup_progress: float):
     # Replace the active_orbs list with only the still-relevant, valid orbs.
     active_orbs = remaining_orbs
 func get_orb_from_pool() -> Area3D:
+    var orb: Area3D
     if not orb_pool.is_empty():
-        var orb = orb_pool.pop_back()
+        orb = orb_pool.pop_back()
         orb.visible = true
         orb.process_mode = Node.PROCESS_MODE_INHERIT
-        return orb
-    
-    var new_orb = orb_scene.instantiate()
-    add_child(new_orb)
-    return new_orb
+    else:
+        orb = orb_scene.instantiate()
+        add_child(orb)
+
+    # Ensure we listen for when this specific orb is collected.
+    if orb.has_signal("collected"):
+        # Prevent duplicate connections.
+        if orb.collected.is_connected(_on_orb_collected):
+            orb.collected.disconnect(_on_orb_collected)
+        orb.collected.connect(_on_orb_collected)
+    return orb
+
+func _on_orb_collected(orb: Area3D):
+    # Called when an orb emits its 'collected' signal.
+    # Disconnect first to avoid re-entry while recycling.
+    if orb.has_signal("collected") and orb.collected.is_connected(_on_orb_collected):
+        orb.collected.disconnect(_on_orb_collected)
+
+    # Tell the player to speed up if available.
+    if is_instance_valid(player_path_follow) and player_path_follow.has_method("add_speed_boost"):
+        player_path_follow.add_speed_boost()
+
+    # Remove from active list and defer returning to pool to avoid physics conflicts.
+    if orb in active_orbs:
+        active_orbs.erase(orb)
+    if is_instance_valid(orb):
+        # Defer operations that change physics/visibility until after the physics step.
+        call_deferred("_recycle_orb", orb)
+
+
+func _recycle_orb(orb: Area3D):
+    # This function runs after the physics step is complete.
+    if not is_instance_valid(orb):
+        return
+    orb.visible = false
+    orb.process_mode = Node.PROCESS_MODE_DISABLED
+    orb_pool.append(orb)
