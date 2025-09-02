@@ -1,10 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=10 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
 [ext_resource type="Script" uid="uid://imk0a517n8ir" path="res://scripts/SpawnableItem.gd" id="2_t4bxf"]
 [ext_resource type="Script" uid="uid://dqblj4pvxekn5" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
 [ext_resource type="Script" uid="uid://w0hpjrww4vgc" path="res://scripts/PlayerPathFollow.gd" id="3_p73vr"]
 [ext_resource type="Resource" uid="uid://c1t3dv785gmti" path="res://resources/rock_item.tres" id="3_x628s"]
+[ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hat22"]
 
@@ -30,17 +31,27 @@ environment = SubResource("Environment_hat22")
 [node name="OrbGenerator" type="Node3D" parent="." node_paths=PackedStringArray("player_path_follow")]
 script = ExtResource("2_xej52")
 player_path_follow = NodePath("../Path3D/PlayerPathFollow")
+player_scene = ExtResource("1_xej52")
+segment_length = 115.0
+curve_amplitude = 1.0
 obstacle_items = Array[ExtResource("2_t4bxf")]([ExtResource("3_x628s")])
 
 [node name="Path3D" type="Path3D" parent="."]
 
-[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D"]
+[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D" node_paths=PackedStringArray("raycast")]
+rotation_mode = 1
 script = ExtResource("3_p73vr")
 friction = 0.5
+raycast = NodePath("Angel/RayCast3D")
 
 [node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="RayCast3D" type="RayCast3D" parent="Path3D/PlayerPathFollow/Angel"]
+target_position = Vector3(0, 0, -2)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." node_paths=PackedStringArray("player_controller")]
+script = ExtResource("6_7fyak")
+player_controller = NodePath("../Path3D/PlayerPathFollow")
 
 [node name="SpeedLabel" type="Label" parent="CanvasLayer"]
 anchors_preset = 10
@@ -49,4 +60,5 @@ offset_left = -100.0
 offset_top = 20.0
 offset_right = -100.0
 offset_bottom = 43.0
+text = "Speed: 0"
 horizontal_alignment = 2

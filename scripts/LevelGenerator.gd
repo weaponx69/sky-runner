@@ -82,6 +82,8 @@ func _ready():
     if not path3d.curve:
         path3d.curve = Curve3D.new()
     curve = path3d.curve
+    # Clear any existing points to avoid duplicate/forked paths if generator runs twice.
+    curve.clear_points()
 
     generate_path_segment(0, 600.0)
     spawn_items_on_path()
@@ -193,7 +195,7 @@ func _spawn_item(follower: PathFollow3D, item_data: SpawnableItem):
     # We connect the signal directly to the method. This is the modern Godot 4 way.
     if new_item.has_signal("player_collided"):
         if is_instance_valid(player_path_follow):
-            new_item.player_collided.connect(player_path_follow._on_obstacle_collision)
+            new_item.player_collided.connect(player_path_follow.apply_penalty)
     # ------------------------------------
 
     add_child(new_item)
@@ -251,15 +253,22 @@ func cleanup_old_items(cleanup_progress: float):
     active_items = remaining
 
 func get_orb_from_pool() -> Area3D:
-    var orb: Area3D
-    if not orb_pool.is_empty():
-        orb = orb_pool.pop_back()
+    var orb: Area3D = null
+    # Keep trying to get a valid orb from the pool until the pool is empty.
+    while not orb_pool.is_empty():
+        var candidate_orb = orb_pool.pop_back()
+        # Discard any invalid instances or ones queued for deletion.
+        if is_instance_valid(candidate_orb) and not candidate_orb.is_queued_for_deletion():
+            orb = candidate_orb
+            break
+    # If we found a valid orb in the pool, activate it.
+    if is_instance_valid(orb):
         orb.visible = true
         orb.process_mode = Node.PROCESS_MODE_INHERIT
     else:
         orb = orb_scene.instantiate()
         add_child(orb)
-
+    # Ensure we are connected to the collected signal.
     if orb.has_signal("collected"):
         var orb_callable = Callable(self, "_on_orb_collected")
         if orb.collected.is_connected(orb_callable):
@@ -287,3 +296,4 @@ func _recycle_orb(orb: Area3D):
     orb.visible = false
     orb.process_mode = Node.PROCESS_MODE_DISABLED
     orb_pool.append(orb)
+    

@@ -9,7 +9,7 @@ albedo_color = Color(0.5, 0.5, 0.5, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5md23"]
 
-[node name="Rock" type="Area3D"]
+[node name="Rock" type="Area3D" groups=["obstacles"]]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
 collision_layer = 3
 collision_mask = 3
