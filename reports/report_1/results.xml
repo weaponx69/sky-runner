@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites id="2025-09-03" name="report_1" tests="1" failures="3" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="LevelGeneratorTest" package="scripts" timestamp="2025-09-03T18:15:24" hostname="localhost" tests="1" failures="3" errors="0" skipped="0" flaky="0" time="0.129">
+		<testcase name="test__ready" classname="LevelGeneratorTest" time="0.113">
+			<failure message="FAILED: res://scripts/LevelGeneratorTest.gd:13" type="FAILURE">
+<![CDATA[
+Test not implemented!
+]]>
+			</failure>
+			<failure message="FAILED: res://scripts/LevelGeneratorTest.gd:13" type="FAILURE">
+<![CDATA[
+Test not implemented!
+]]>
+			</failure>
+			<failure message="FAILED: res://scripts/LevelGeneratorTest.gd:13" type="FAILURE">
+<![CDATA[
+Test not implemented!
+]]>
+			</failure>
+		</testcase>
+	</testsuite>
+</testsuites>
