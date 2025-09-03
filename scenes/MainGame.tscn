@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=11 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
 [ext_resource type="Script" uid="uid://imk0a517n8ir" path="res://scripts/SpawnableItem.gd" id="2_t4bxf"]
@@ -6,17 +6,35 @@
 [ext_resource type="Script" uid="uid://w0hpjrww4vgc" path="res://scripts/PlayerPathFollow.gd" id="3_p73vr"]
 [ext_resource type="Resource" uid="uid://c1t3dv785gmti" path="res://resources/rock_item.tres" id="3_x628s"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
+[ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="7_1hpqh"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_hat22"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1hpqh"]
+sky_top_color = Color(0.639216, 0.839216, 1, 1)
+sky_horizon_color = Color(1, 0.776471, 0.639216, 1)
+sky_energy_multiplier = 3.0
+ground_bottom_color = Color(0.901961, 0.776471, 1, 1)
+ground_horizon_color = Color(1, 0.894118, 0.819608, 1)
+sun_angle_max = 0.0
 
-[sub_resource type="Sky" id="Sky_xej52"]
-sky_material = SubResource("ProceduralSkyMaterial_hat22")
+[sub_resource type="Sky" id="Sky_7f7ne"]
+sky_material = SubResource("ProceduralSkyMaterial_1hpqh")
 
-[sub_resource type="Environment" id="Environment_hat22"]
+[sub_resource type="Environment" id="Environment_rtryj"]
 background_mode = 2
-sky = SubResource("Sky_xej52")
-ambient_light_source = 3
-ambient_light_color = Color(0.973535, 0.973535, 0.973535, 1)
+sky = SubResource("Sky_7f7ne")
+tonemap_exposure = 0.3
+glow_enabled = true
+glow_intensity = 1.0
+glow_strength = 1.3
+glow_blend_mode = 0
+glow_hdr_threshold = 0.7
+fog_enabled = true
+fog_mode = 1
+fog_light_color = Color(1, 0.941176, 0.909804, 1)
+fog_light_energy = 1.5
+fog_density = 1.0
+fog_depth_begin = 100.0
+fog_depth_end = 1000.0
 
 [node name="MainGame" type="Node3D"]
 
@@ -26,7 +44,7 @@ shadow_enabled = true
 shadow_bias = 0.2
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_hat22")
+environment = SubResource("Environment_rtryj")
 
 [node name="OrbGenerator" type="Node3D" parent="." node_paths=PackedStringArray("player_path_follow")]
 script = ExtResource("2_xej52")
@@ -62,3 +80,8 @@ offset_right = -100.0
 offset_bottom = 43.0
 text = "Speed: 0"
 horizontal_alignment = 2
+
+[node name="DistantScenery" type="Node3D" parent="."]
+
+[node name="Rock03" parent="DistantScenery" instance=ExtResource("7_1hpqh")]
+transform = Transform3D(150, 0, 0, 0, 150, 0, 0, 0, 150, 0, 0, -100000)
