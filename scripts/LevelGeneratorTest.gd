@@ -6,8 +6,15 @@ extends GdUnitTestSuite
 
 # TestSuite generated from
 const __source: String = 'res://scripts/LevelGenerator.gd'
+const LevelGenerator = preload("res://scripts/LevelGenerator.gd")
+
+var level_generator: Node
 
 
-func test__ready() -> void:
-    # remove this line and complete your test
-    assert_not_yet_implemented()
+func before_test():
+    level_generator = auto_free(LevelGenerator.new())
+
+
+func test_initialization():
+    assert_that(level_generator).is_not_null()
+    assert_that(level_generator).is_inheriting(Node3D)
