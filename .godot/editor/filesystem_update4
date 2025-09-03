@@ -1,6 +1,1 @@
-res://scenes/Orb3D.tscn
-res://scripts/Angel.gd
-res://scenes/Angel.tscn
-res://scenes/Rock.tscn
-res://scenes/MainGame.tscn
 res://scripts/LevelGenerator.gd
