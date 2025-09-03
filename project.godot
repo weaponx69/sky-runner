@@ -15,6 +15,10 @@ run/main_scene="uid://cngl1lob1i0my"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameStateEvents="*res://addons/brennys-game-manager/event-bus/game-state-events.gd"
+
 [editor]
 
 version_control/plugin_name="GitPlugin"
@@ -22,7 +26,12 @@ version_control/autoload_on_startup=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/gamedev_assistant/plugin.cfg")
+enabled=PackedStringArray("res://addons/brennys-game-manager/plugin.cfg", "res://addons/gamedev_assistant/plugin.cfg", "res://addons/gdterm/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")
+
+[gdunit4]
+
+settings/test/test_discovery=true
+settings/test/flaky_check_enable=true
 
 [input]
 
