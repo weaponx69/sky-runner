@@ -34,7 +34,7 @@
 		<div class="report-container">
 			<h1>Testsuite Report</h1>
 			<div>
-				<span class="label">res://scripts/LevelGeneratorTest.gd</span>
+				<span class="label">res://test/LevelGeneratorTest.gd</span>
 			</div>
 			<div class="summary">
 				<div class="summary-item">
@@ -51,28 +51,28 @@
 				</div>
 				<div class="summary-item">
 					<span class="label">Failures</span>
-					<span class="value">5</span>
+					<span class="value">3</span>
 				</div>
 				<div class="summary-item">
 					<span class="label">Orphans</span>
-					<span class="value">20</span>
+					<span class="value">28</span>
 				</div>
 				<div class="summary-item">
 					<span class="label">Duration</span>
-					<span class="value">352ms</span>
+					<span class="value">576ms</span>
 				</div>
 				<div class="success-rate">
-					<div class="check-icon status-error">✓</div>
+					<div class="check-icon status-failed">✓</div>
 					<div class="rate-text">
 						<span class="label">Success Rate</span>
-						<span class="value">100%</span>
+						<span class="value">40%</span>
 					</div>
 				</div>
 			</div>
 		</div>
 		<div class="breadcrumb">
 			<a href="../index.html"><span>All</span></a>
-			<a href="../path/scripts.html"><span>scripts</span></a>
+			<a href="../path/test.html"><span>test</span></a>
 			<a class="active" href="#"><span>LevelGeneratorTest</span></a>
 		</div>
 	</header>
@@ -93,15 +93,15 @@
 					</thead>
 					<tbody>
 						
-								<tr class="error">
+								<tr class="failed">
 									<td>TestSuite hooks</td>
 									<td>n/a</td>
-									<td>20</td>
-									<td>352ms</td>
+									<td>28</td>
+									<td>576ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
- Detected <10> orphan nodes during test suite setup stage! Check before() and after()!
+ Detected <14> orphan nodes during test suite setup stage! Check before() and after()!
 										</pre>
 									</td>
 								</tr>
@@ -109,17 +109,14 @@ line 1: WARNING:
 
 								<tr class="testcase-group">
 									<td>test_initialization_calculates_player_width</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td><span class="status status-warning">WARNING</span></td>
 									<td>0</td>
 									<td>2</td>
-									<td>46ms</td>
+									<td>41ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
  Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
-line 63: Godot Runtime Error !
-	'at: LevelGeneratorTest.test_initialization_calculates_player_width (res://scripts/LevelGeneratorTest.gd:63)'
-Error: 'Invalid call. Nonexistent function 'is_equal_to' in base 'RefCounted (GdUnitFloatAssertImpl.gd)'.'
 
 										</pre>
 									</td>
@@ -128,17 +125,14 @@ Error: 'Invalid call. Nonexistent function 'is_equal_to' in base 'RefCounted (Gd
 
 								<tr class="testcase-group">
 									<td>test_generate_path_segment_adds_points_to_curve</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td><span class="status status-warning">WARNING</span></td>
 									<td>0</td>
 									<td>2</td>
-									<td>48ms</td>
+									<td>70ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
  Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
-line 73: Godot Runtime Error !
-	'at: LevelGeneratorTest.test_generate_path_segment_adds_points_to_curve (res://scripts/LevelGeneratorTest.gd:73)'
-Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted (GdUnitIntAssertImpl.gd)'.'
 
 										</pre>
 									</td>
@@ -147,17 +141,24 @@ Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted
 
 								<tr class="testcase-group">
 									<td>test_spawn_items_on_path_spawns_orbs</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td><span class="status status-failed">FAILED</span></td>
 									<td>0</td>
-									<td>2</td>
-									<td>81ms</td>
+									<td>6</td>
+									<td>248ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
  Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
-line 94: Godot Runtime Error !
-	'at: LevelGeneratorTest.test_spawn_items_on_path_spawns_orbs (res://scripts/LevelGeneratorTest.gd:94)'
-Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted (GdUnitIntAssertImpl.gd)'.'
+line <n/a>: Expecting to be greater than:
+ '83' but was '83'
+line 1: WARNING:
+ Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
+line <n/a>: Expecting to be greater than:
+ '85' but was '85'
+line 1: WARNING:
+ Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
+line <n/a>: Expecting to be greater than:
+ '75' but was '75'
 
 										</pre>
 									</td>
@@ -166,17 +167,14 @@ Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted
 
 								<tr class="testcase-group">
 									<td>test_cleanup_old_items_removes_passed_items</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td><span class="status status-warning">WARNING</span></td>
 									<td>0</td>
 									<td>2</td>
-									<td>51ms</td>
+									<td>98ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
  Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
-line 110: Godot Runtime Error !
-	'at: LevelGeneratorTest.test_cleanup_old_items_removes_passed_items (res://scripts/LevelGeneratorTest.gd:110)'
-Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted (GdUnitIntAssertImpl.gd)'.'
 
 										</pre>
 									</td>
@@ -185,17 +183,14 @@ Error: 'Invalid call. Nonexistent function 'is_greater_than' in base 'RefCounted
 
 								<tr class="testcase-group">
 									<td>test_orb_pooling_recycles_orbs</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td><span class="status status-warning">WARNING</span></td>
 									<td>0</td>
 									<td>2</td>
-									<td>31ms</td>
+									<td>35ms</td>
 									<td class="report-column">
 										<pre>
 line 1: WARNING:
  Detected <2> orphan nodes during test setup! Check before_test() and after_test()!
-line 132: Godot Runtime Error !
-	'at: LevelGeneratorTest.test_orb_pooling_recycles_orbs (res://scripts/LevelGeneratorTest.gd:132)'
-Error: 'Invalid call. Nonexistent function 'is_equal_to' in base 'RefCounted (GdUnitIntAssertImpl.gd)'.'
 
 										</pre>
 									</td>
@@ -212,7 +207,7 @@ Error: 'Invalid call. Nonexistent function 'is_equal_to' in base 'RefCounted (Gd
 	</main>
 
 	<footer>
-		<p>Generated by <a href="https://github.com/MikeSchulze/gdUnit4">GdUnit4</a> at 2025-09-03 20:49:38</p>
+		<p>Generated by <a href="https://github.com/MikeSchulze/gdUnit4">GdUnit4</a> at 2025-09-04 07:53:52</p>
 		<div class="status-legend">
 			<span class="status-legend-item">
 				<span class="status-box status-skipped"></span> Skipped

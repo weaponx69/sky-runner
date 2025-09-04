@@ -1,7 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites id="2025-09-03" name="report_1" tests="1" failures="0" skipped="0" flaky="0" time="0.000">
-	<testsuite id="0" name="LevelGeneratorTest" package="scripts" timestamp="2025-09-03T19:55:18" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="0.042">
-		<testcase name="test_initialization" classname="LevelGeneratorTest" time="0.028">
+<testsuites id="2025-09-04" name="report_1" tests="5" failures="3" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="LevelGeneratorTest" package="test" timestamp="2025-09-04T07:53:52" hostname="localhost" tests="5" failures="3" errors="0" skipped="0" flaky="0" time="0.576">
+		<testcase name="test_initialization_calculates_player_width" classname="LevelGeneratorTest" time="0.041">
+		</testcase>
+		<testcase name="test_generate_path_segment_adds_points_to_curve" classname="LevelGeneratorTest" time="0.070">
+		</testcase>
+		<testcase name="test_spawn_items_on_path_spawns_orbs" classname="LevelGeneratorTest" time="0.248">
+			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
+<![CDATA[
+Expecting to be greater than:
+ '83' but was '83'
+]]>
+			</failure>
+			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
+<![CDATA[
+Expecting to be greater than:
+ '85' but was '85'
+]]>
+			</failure>
+			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
+<![CDATA[
+Expecting to be greater than:
+ '75' but was '75'
+]]>
+			</failure>
+		</testcase>
+		<testcase name="test_cleanup_old_items_removes_passed_items" classname="LevelGeneratorTest" time="0.098">
+		</testcase>
+		<testcase name="test_orb_pooling_recycles_orbs" classname="LevelGeneratorTest" time="0.035">
 		</testcase>
 	</testsuite>
 </testsuites>

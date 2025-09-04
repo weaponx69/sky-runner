@@ -32,7 +32,7 @@ enabled=PackedStringArray("res://addons/brennys-game-manager/plugin.cfg", "res:/
 
 settings/test/test_discovery=true
 settings/test/flaky_check_enable=true
-settings/test/test_lookup_folder="scripts"
+settings/test/test_lookup_folder="tests"
 
 [input]
 

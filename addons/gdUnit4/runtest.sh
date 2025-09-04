@@ -60,3 +60,4 @@ echo "Run tests ends with $exit_code"
 "$godot_bin" --headless --path . --quiet -s res://addons/gdUnit4/bin/GdUnitCopyLog.gd $filtered_args > /dev/null
 exit_code2=$?
 exit $exit_code
+
