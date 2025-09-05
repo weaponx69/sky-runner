@@ -91,11 +91,7 @@ func spawn_rocks_along_path():
         rock_position.y = rock_y_position
         
         # Position rock with variation
-        var height = randf_range(rock_height_range.x, rock_height_range.y)
-        side_offset = randf_range(-rock_side_variance, rock_side_variance)
-        
-        
-        #var rock_position = path_position + (right_vector * side_offset) + (up_vector * height)
+        side_offset = randf_range(-rock_side_variance, rock_side_variance)        
         rock_position.y = rock_y_position
 
         # Create rock

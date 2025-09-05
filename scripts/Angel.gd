@@ -9,6 +9,10 @@ extends Area3D
 func _ready():
     # Make sure this camera is the active one
     camera.make_current()
+    
+    # Connect the area_entered signal to our handler function.
+    area_entered.connect(_on_area_entered)
+    
     # Reset the mesh rotation and try different angles
     player_mesh.rotation_degrees = Vector3(0, 0, 0)  # Reset first
     # Try rotating the mesh to face the path direction; side bar suggests 90 degrees off
@@ -54,7 +58,17 @@ func _physics_process(_delta):
     var path_follow = get_parent()
     if path_follow:
         global_position = path_follow.global_position
+        
+func _on_area_entered(area):
+    # Check if the body that entered is an orb.
+    if area.is_in_group("orbs"):
+        # Get the parent (PlayerPathFollow) and call its increase_speed function.
+        get_parent().increase_speed(get_parent().current_speed)
+        
+        # Remove the collected orb from the scene.
+        area.queue_free()
 
 func _process(_delta):
-    print("Angel position: ", global_position)
-    print("Angel forward: ", -global_transform.basis.z)
+    #print("Angel position: ", global_position)
+    #print("Angel forward: ", -global_transform.basis.z)
+    pass

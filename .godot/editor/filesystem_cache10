@@ -518,17 +518,17 @@ Rock3_0 (2).jpg::CompressedTexture2D/CompressedTexture2D::8568053929695411017::1
 Rock3_0.jpg::CompressedTexture2D/CompressedTexture2D::5059834497153313308::1757009282::1757009285::1::::<><><>0<>0<>d666fd6f37c918d171ed5c2048adb853<>res://.godot/imported/Rock3_0.jpg-4ed7845e971414ffef79c6569df89b47.s3tc.ctex::
 Rock3_1 (2).png::CompressedTexture2D/CompressedTexture2D::8088254484774681951::1757007179::1757009307::1::::<><><>0<>0<>189f8577aa94292dfeddcfe71cffe334<>res://.godot/imported/Rock3_1 (2).png-e1e795e4b6f9e10496d8b558036bc729.s3tc.ctex::
 Rock3_1.png::CompressedTexture2D/CompressedTexture2D::5748118367308098575::1757009284::1757009285::1::::<><><>0<>0<>fcec807dbeaed9386c5e26aea1a8af71<>res://.godot/imported/Rock3_1.png-ed0df276565288338250b36e3fd3e430.s3tc.ctex::
-::res://scenes/::1757024364
-Angel.tscn::PackedScene::6313261372713752910::1757024364::0::1::::<><><>0<>0<><>::uid://dps3km6lfla2h::::res://scripts/Angel.gd<>uid://bfw8sqiparajl::::res://scripts/SmoothCamera.gd
+::res://scenes/::1757057357
+Angel.tscn::PackedScene::6313261372713752910::1757057357::0::1::::<><><>0<>0<><>::uid://dps3km6lfla2h::::res://scripts/Angel.gd<>uid://bfw8sqiparajl::::res://scripts/SmoothCamera.gd
 GameOver.tscn::PackedScene/PackedScene::2814226826073012866::1756596033::0::1::::<><><>0<>0<><>::uid://v5vmgovbu0b2::::res://scripts/GameOver.gd
-MainGame.tscn::PackedScene::5698397518231577492::1757024364::0::1::::<><><>0<>0<><>::uid://cv7gq0ipmdfww::::res://scenes/Angel.tscn<>uid://dd0h7f0f4fb0a::::res://scripts/LevelGenerator.gd<>uid://w0hpjrww4vgc::::res://scripts/PlayerPathFollow.gd<>uid://cpryxalvw3fys::::res://rocks/Rock1.glb<>uid://cxtx43yjt5fyv::::res://scripts/UI.gd<>uid://chlys2y3x20dy::::res://scripts/Rock.gd<>uid://dnoxrh3ylvk0m::::res://rocks/Rock2.glb<>uid://dfn4erl255ig6::::res://rocks/Rock3.glb
-Orb3D.tscn::PackedScene::3558727972004877842::1757024364::0::1::::<><><>0<>0<><>::uid://dv2uabfuddpv6::::res://scripts/Orb3D.gd
+MainGame.tscn::PackedScene::5698397518231577492::1757062465::0::1::::<><><>0<>0<><>::uid://cv7gq0ipmdfww::::res://scenes/Angel.tscn<>uid://dd0h7f0f4fb0a::::res://scripts/LevelGenerator.gd<>uid://w0hpjrww4vgc::::res://scripts/PlayerPathFollow.gd<>uid://cpryxalvw3fys::::res://rocks/Rock1.glb<>uid://cxtx43yjt5fyv::::res://scripts/UI.gd<>uid://chlys2y3x20dy::::res://scripts/Rock.gd<>uid://dnoxrh3ylvk0m::::res://rocks/Rock2.glb<>uid://dfn4erl255ig6::::res://rocks/Rock3.glb
+Orb3D.tscn::PackedScene::3558727972004877842::1757057357::0::1::::<><><>0<>0<><>::uid://dv2uabfuddpv6::::res://scripts/Orb3D.gd
 player_path_follow.gd::GDScript/GDScript::3598226486485193957::1756409189::0::1::::<>PathFollow3D<><>0<>0<><>::
-Rock.tscn::PackedScene::2735103446182106899::1757024364::0::1::::<><><>0<>0<><>::uid://chlys2y3x20dy::::res://scripts/Rock.gd
-::res://scripts/::1757024364
+Rock.tscn::PackedScene::2735103446182106899::1757057357::0::1::::<><><>0<>0<><>::uid://chlys2y3x20dy::::res://scripts/Rock.gd
+::res://scripts/::1757057351
 Angel.gd::GDScript::8250972117635418085::1757024364::0::1::::<>Area3D<><>0<>0<><>::
 GameOver.gd::GDScript/GDScript::1537193873119085809::1756628262::0::1::::<>Control<><>0<>0<><>::
-LevelGenerator.gd::GDScript/GDScript::7421920491702207150::1757018270::0::1::::<>Node3D<><>0<>0<><>::
+LevelGenerator.gd::GDScript::7421920491702207150::1757057351::0::1::::<>Node3D<><>0<>0<><>::
 MainGame.gd::GDScript/GDScript::1899747130753456684::1756214986::0::1::::<>Node2D<><>0<>0<><>::
 Orb3D.gd::GDScript/GDScript::8690180367853152173::1757011844::0::1::::<>Area3D<><>0<>0<><>::
 Orb.gd::GDScript/GDScript::2411980940457937928::1756628262::0::1::::<>Area3D<><>0<>0<><>::
