@@ -80,10 +80,10 @@ func _physics_process(delta):
             
         # --- New Tilting Logic ---
         # Calculate the target tilt based on player input. Note the inversion (-input_dir).
-        #var target_tilt_rad = deg_to_rad(-input_dir * max_tilt_angle)
+        var target_tilt_rad = deg_to_rad(-input_dir * max_tilt_angle)
     
         # Smoothly interpolate the angel's z rotation towards the target tilt.
-        #angel.rotation.z = lerp(angel.rotation.z, target_tilt_rad, tilt_speed * delta)
+        angel.rotation.z = lerp(angel.rotation.z, target_tilt_rad, tilt_speed * delta)
 
 func increase_speed(amount: float):
     # FIX: We now increase the base_speed and clamp IT against the max_speed.
