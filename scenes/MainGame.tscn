@@ -1,12 +1,13 @@
-[gd_scene load_steps=11 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=15 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
-[ext_resource type="Script" uid="uid://imk0a517n8ir" path="res://scripts/SpawnableItem.gd" id="2_t4bxf"]
 [ext_resource type="Script" uid="uid://dd0h7f0f4fb0a" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
 [ext_resource type="Script" uid="uid://w0hpjrww4vgc" path="res://scripts/PlayerPathFollow.gd" id="3_p73vr"]
-[ext_resource type="Resource" uid="uid://c1t3dv785gmti" path="res://resources/rock_item.tres" id="3_x628s"]
+[ext_resource type="PackedScene" uid="uid://cpryxalvw3fys" path="res://rocks/Rock1.glb" id="5_7fyak"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
-[ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="7_1hpqh"]
+[ext_resource type="Script" uid="uid://chlys2y3x20dy" path="res://scripts/Rock.gd" id="6_fpdtd"]
+[ext_resource type="PackedScene" uid="uid://dnoxrh3ylvk0m" path="res://rocks/Rock2.glb" id="7_1hpqh"]
+[ext_resource type="PackedScene" uid="uid://dfn4erl255ig6" path="res://rocks/Rock3.glb" id="8_7f7ne"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1hpqh"]
 sky_top_color = Color(0.639216, 0.839216, 1, 1)
@@ -36,6 +37,15 @@ fog_density = 1.0
 fog_depth_begin = 100.0
 fog_depth_end = 1000.0
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_1hpqh"]
+size = Vector3(1, 1, 0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7f7ne"]
+size = Vector3(1, 1, 0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rtryj"]
+size = Vector3(1, 1, 0)
+
 [node name="MainGame" type="Node3D"]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
@@ -46,21 +56,13 @@ shadow_bias = 0.2
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_rtryj")
 
-[node name="OrbGenerator" type="Node3D" parent="." node_paths=PackedStringArray("player_path_follow")]
+[node name="OrbGenerator" type="Node3D" parent="."]
 script = ExtResource("2_xej52")
-player_path_follow = NodePath("../Path3D/PlayerPathFollow")
-player_scene = ExtResource("1_xej52")
-segment_length = 115.0
-curve_amplitude = 1.0
-obstacle_items = Array[ExtResource("2_t4bxf")]([ExtResource("3_x628s")])
 
 [node name="Path3D" type="Path3D" parent="."]
 
-[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D" node_paths=PackedStringArray("raycast")]
-rotation_mode = 1
+[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D"]
 script = ExtResource("3_p73vr")
-friction = 0.5
-raycast = NodePath("Angel/RayCast3D")
 
 [node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
 
@@ -83,5 +85,23 @@ horizontal_alignment = 2
 
 [node name="DistantScenery" type="Node3D" parent="."]
 
-[node name="Rock03" parent="DistantScenery" instance=ExtResource("7_1hpqh")]
-transform = Transform3D(150, 0, 0, 0, 150, 0, 0, 0, 150, 0, 0, -100000)
+[node name="Rock1" parent="DistantScenery" instance=ExtResource("5_7fyak")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.21986, 0, -4.80133)
+script = ExtResource("6_fpdtd")
+
+[node name="RockCollision1" type="CollisionShape3D" parent="DistantScenery/Rock1"]
+shape = SubResource("BoxShape3D_1hpqh")
+
+[node name="Rock2" parent="DistantScenery" instance=ExtResource("7_1hpqh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.457821, 0, -11.9883)
+script = ExtResource("6_fpdtd")
+
+[node name="RockCollision2" type="CollisionShape3D" parent="DistantScenery/Rock2"]
+shape = SubResource("BoxShape3D_7f7ne")
+
+[node name="Rock3" parent="DistantScenery" instance=ExtResource("8_7f7ne")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -120.432, 0, -54.921)
+script = ExtResource("6_fpdtd")
+
+[node name="RockCollision3" type="CollisionShape3D" parent="DistantScenery/Rock3"]
+shape = SubResource("BoxShape3D_rtryj")

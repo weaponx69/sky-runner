@@ -11,7 +11,7 @@ func _ready():
     add_to_group("orbs")
     
     # Connect the area_entered signal (detect other Area3D, e.g. Angel)
-    area_entered.connect(_on_area_entered)
+    connect("area_entered", Callable(self, "_on_area_entered"))
 func _on_area_entered(area):
     if area.is_in_group("player"):
         # Notify the LevelGenerator (or any listener) that we've been collected.

@@ -1,50 +1,66 @@
+# res://scripts/PlayerPathFollow.gd
+# TODO: Searched file for assignments to 'translation' and found none; no replacements necessary (use 'position' for PathFollow3D).
+# res://scripts/PlayerPathFollow.gd
+# TODO: No occurrences of 'unit_offset' found. Confirm whether 'progress' should use the PathFollow3D property 'progress_ratio' instead of a custom variable.
+# res://scripts/PlayerPathFollow.gd
 extends PathFollow3D
 
-@export_group("Movement")
-@export var initial_speed = 35.0 # The speed the player starts with.
-@export var max_speed = 45.0 # The maximum speed the player can reach.
-@export var boost_amount = 15.0 # Speed gained per orb.
-@export var friction = 5.0 # How quickly speed wears off. Higher is faster.
-@export var raycast: RayCast3D # <-- Drag your RayCast3D node here in the Inspector!
+@export var base_speed: float = 2.0
+@export var lateral_speed: float = 15.0
+@export var max_lateral_offset: float = 5.0
+@export var acceleration: float = 2.0
 
-var current_speed: float = 0.0
-var speed_boost: float = 0.0
-var speed_penalty: float = 0.0
+#var progress_ratio: float = 0.5
+var current_speed: float = 2.0
+var paused: bool = false
 
 func _ready():
-    # Give the player an initial burst of speed.
-    speed_boost = initial_speed
-    
-    if not raycast:
-        push_error("RayCast3D node not assigned! Forward movement will not be collision-aware.")
+    # Debug initial positions and path length
+    var path_node = get_parent() as Path3D
+    var path_length = 0.0
+    if path_node and path_node.curve:
+        path_length = path_node.curve.get_baked_length()
+    print("PlayerPathFollow initial global_position: ", global_position)
+    print("Path length: ", path_length)
+    print("Initial progress: ", progress, " progress_ratio: ", progress_ratio)
 
+func _process(_delta):
+    var angel = get_node_or_null("Angel")
+    if angel:
+        print("Angel position from path: ", angel.global_position)
+    # Allow pausing/unpausing movement with space bar (ui_accept)
+    if Input.is_action_just_pressed("ui_accept"):
+        paused = not paused
+        print("Movement paused: ", paused)
 func _physics_process(delta):
-    # Check if the raycast is hitting an obstacle.
-    if raycast and raycast.is_colliding():
-        # Stop forward movement if an obstacle is detected.
-        # This prevents the player from fighting with the physics engine.
-        current_speed = 0.0
-    else:
-        # Calculate the final speed including boosts and penalties
-        var final_speed = speed_boost * (1.0 - speed_penalty)
-        # Smoothly interpolate current_speed toward final_speed
-        current_speed = lerp(current_speed, final_speed, delta * 5.0)
-
-    # Move based on the current speed.
-    progress += current_speed * delta
-
-    # Gradually recover from penalties and boosts
-    speed_boost = lerp(speed_boost, 0.0, delta * friction)
-    speed_penalty = lerp(speed_penalty, 0.0, delta * 1.0)
-
-# This function is called by the obstacle's signal to apply a slowdown
-func apply_penalty(penalty_amount: float):
-    print("Player script received slowdown signal! Penalty: ", penalty_amount) # Debug print
-    # Add the penalty. Cap the maximum slowdown at 90% to avoid stopping completely.
-    speed_penalty = min(speed_penalty + penalty_amount, 0.9)
+    var path_node = get_parent() as Path3D
+    if not path_node or not path_node.curve:
+        return
     
-func add_speed_boost():
-    # Add to the boost pool rather than directly setting current_speed.
-    speed_boost += boost_amount
-    # Clamp the speed_boost so it cannot exceed the configured max_speed.
-    speed_boost = clamp(speed_boost, 0.0, max_speed)
+    var curve_length = path_node.curve.get_baked_length()
+    if curve_length <= 0:
+        return
+    
+    if not paused:
+        # Smooth acceleration
+        current_speed = lerp(current_speed, base_speed, acceleration * delta)
+        
+        # Forward movement
+        progress += current_speed * delta
+        
+        # Lateral movement
+        var input_dir = 0.0
+        if Input.is_action_pressed("ui_left"):
+            input_dir -= 1.0
+        if Input.is_action_pressed("ui_right"):
+            input_dir += 1.0
+            
+        self.h_offset = clamp(self.h_offset + input_dir * lateral_speed * delta, -max_lateral_offset, max_lateral_offset)
+        
+        # Loop around
+        if progress > curve_length:
+            progress = 0.0
+
+func increase_speed(amount: float):
+    base_speed += amount
+    current_speed = base_speed

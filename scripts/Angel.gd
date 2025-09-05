@@ -1,52 +1,60 @@
 # res://scripts/Angel.gd
+# Edit file: res://scripts/Angel.gd
+# Simplified version that just follows the PathFollow3D
 extends Area3D
+@onready var camera = $SpringArm3D/Camera3D
+@onready var spring_arm = $SpringArm3D
+@onready var player_mesh = $PlayerMesh
 
-@export_group("Movement")
-@export var horizontal_speed = 8.0
-@export var vertical_speed = 4.0
-@export var max_horizontal_distance = 5.0
-@export var max_vertical_distance = 3.0
-
-@export var spawner: Node
-var parent_path_follow: PathFollow3D
 func _ready():
-    parent_path_follow = get_parent() as PathFollow3D
-    if not parent_path_follow:
-        push_error("Angel's parent is not a PathFollow3D! Movement will not work.")
-        set_physics_process(false)
-    else:
-        print("Angel script is ready and connected to PathFollow3D.")
-        # Connect the area_entered signal to the function
-        area_entered.connect(self._on_area_entered)
-
-func _physics_process(delta):
-    # 1. Get player input as a 2D vector.
-    var input_vector = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-
-    # 2. Update the parent's offsets.
-    parent_path_follow.h_offset += input_vector.x * horizontal_speed * delta
-    # ui_up is negative, so we subtract to move up
-    #parent_path_follow.v_offset -= input_vector.y * vertical_speed * delta
+    # Make sure this camera is the active one
+    camera.make_current()
+    # Reset the mesh rotation and try different angles
+    player_mesh.rotation_degrees = Vector3(0, 0, 0)  # Reset first
+    # Try rotating the mesh to face the path direction; side bar suggests 90 degrees off
+    player_mesh.rotation_degrees = Vector3(0, -90, 0)
+    print("PlayerMesh rotation set to -90 degrees")
+    print("PlayerMesh forward now: ", -player_mesh.global_transform.basis.z)
     
-    # 3. Clamp the offset values.
-    parent_path_follow.h_offset = clamp(parent_path_follow.h_offset, -max_horizontal_distance, max_horizontal_distance)
-    parent_path_follow.v_offset = clamp(parent_path_follow.v_offset, -max_vertical_distance, max_vertical_distance)
+    # Reset everything to default relative positioning
+    spring_arm.position = Vector3(0, 2, 0)  # Spring arm 2 units above angel
+    spring_arm.rotation = Vector3(0, 0, 0)  # No rotation
+    
+    # Position camera far back using spring arm length
+    # SpringArm3D will automatically handle the positioning
+    camera.position = Vector3(0, 0, -30)  # 30 units back in local space
+    
+    # Ensure camera looks forward (along -Z)
+    camera.rotation = Vector3(0, 0, 0)
+    
+    print("Camera active: ", camera.is_current())
+    print("SpringArm position: ", spring_arm.global_position)
+    print("Camera position: ", camera.global_position)
+    print("Angel position: ", global_position)
+    
+    # Create a simple colored cube to show forward direction
+    var cube = MeshInstance3D.new()
+    var box_mesh = BoxMesh.new()
+    box_mesh.size = Vector3(0.5, 0.5, 2.0)  # Long box pointing forward
+    cube.mesh = box_mesh
+    
+    var material = StandardMaterial3D.new()
+    material.albedo_color = Color.RED
+    # Override the material on the mesh instance
+    cube.set_surface_override_material(0, material)
+    
+    # Position it in front of the angel
+    cube.position = Vector3(0, 0, 2)
+    add_child(cube)
+    
+    print("Angel is facing: ", -global_transform.basis.z)
+    print("Angel rotation: ", rotation_degrees)
+func _physics_process(_delta):
+    # Just sync position with parent PathFollow3D
+    var path_follow = get_parent()
+    if path_follow:
+        global_position = path_follow.global_position
 
-func _on_area_entered(area: Area3D):
-    # Prevent accessing already-freed instances or ones queued for deletion
-    if not is_instance_valid(area) or area.is_queued_for_deletion():
-        return
-    # Check if the area we collided with is an Orb
-    if area.is_in_group("orbs"):
-        # Tell the parent PathFollow3D to increase its speed
-        if parent_path_follow and parent_path_follow.has_method("add_speed_boost"):
-            parent_path_follow.add_speed_boost()
-        # Return the orb to the spawner's pool if available; otherwise free it
-        if spawner and spawner.has_method("return_orb_to_pool"):
-            spawner.return_orb_to_pool(area)
-        else:
-            area.queue_free()
-    # Check if the area we collided with is an obstacle
-    elif area.is_in_group("obstacles"):
-        print("Collision with an obstacle! Game over.")
-        get_tree().call_deferred("reload_current_scene")
+func _process(_delta):
+    print("Angel position: ", global_position)
+    print("Angel forward: ", -global_transform.basis.z)

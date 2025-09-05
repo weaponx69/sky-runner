@@ -5,7 +5,7 @@ extends CanvasLayer
 # We also need a reference to the player controller.
 @export var player_controller: PathFollow3D
 
-func _process(delta):
+func _process(_delta):
     # First, check if the player_controller is valid.
     if is_instance_valid(player_controller):
         # Get the current speed from the player controller.
