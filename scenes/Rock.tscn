@@ -11,8 +11,6 @@ albedo_color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="Rock" type="Area3D" groups=["obstacles"]]
 transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
-collision_layer = 3
-collision_mask = 3
 script = ExtResource("1_bpoff")
 
 [node name="RockMesh" type="MeshInstance3D" parent="."]

@@ -1,6 +1,8 @@
 # res://scripts/LevelGenerator.gd
 extends Node3D
 
+@onready var player_path_follow: PathFollow3D
+
 @export var path_radius: float = 2000.0
 @export var orb_count: int = 205
 @export var rock_count: int = 150
@@ -18,12 +20,12 @@ func _ready():
     orb_scene = preload("res://scenes/Orb3D.tscn")
     rock_scene = preload("res://scenes/Rock.tscn")
 
+    player_path_follow = get_node("../Path3D/PlayerPathFollow")
+    
     create_large_circular_path()
     spawn_orbs_along_path()
     spawn_rocks_along_path()
-    
-    # Debug: Add a visible marker at origin for reference
-    #add_debug_marker()
+
 
 func create_large_circular_path():
     var curve = Curve3D.new()
@@ -52,55 +54,58 @@ func spawn_orbs_along_path():
     for i in range(orb_count):
         # Spread orbs evenly across the entire path
         var progress = (float(i) / float(orb_count)) * path_length
-        
         var path_position = path_3d.curve.sample_baked(progress)
-        
         var orb = orb_scene.instantiate()
         
         add_child(orb)
         
-        # NOW that it's in the tree, we can safely set its global position.
         orb.global_position = path_position + Vector3(0, orb_y_position, 0)
         orb.set_meta("path_progress", progress)
+        orb.collected.connect(_on_orb_collected)
 
+        orb.global_position = path_position + Vector3(0, orb_y_position, 0)
+        orb.set_meta("path_progress", progress)
+        
+        
 func spawn_rocks_along_path():
-    #print("Spawning rocks…")
     var path_3d = get_node("../Path3D")
     if not path_3d or not path_3d.curve:
         return
 
     var path_length = path_3d.curve.get_baked_length()
     if path_length == 0: return
+    
+    # Create noise for random positioning
+    var noise = FastNoiseLite.new()
+    noise.seed = randi()
+    noise.frequency = 0.5
 
     for i in range(rock_count):
-        var progress = (float(i) / float(rock_count)) * path_length
-
+        # Use noise for random progress along path
+        var noise_val = noise.get_noise_1d(i * 0.1)
+        var progress = randf_range(0, path_length)
+        
         # Get position on path
         var path_position = path_3d.curve.sample_baked(progress)
-        var path_direction = path_3d.curve.sample_baked_with_rotation(progress).basis.z
-
-        # Calculate perpendicular directions for offset
-        var up_vector = Vector3.UP
-        var right_vector = path_direction.cross(up_vector).normalized()
-        var _forward_vector = path_direction
+        var tangent = path_3d.curve.sample_baked_with_rotation(progress).basis.z
         
-        # Calculate the base position on the XZ plane
-        var side_offset = randf_range(-rock_side_variance, rock_side_variance)
-        var rock_position = path_position + (right_vector * side_offset)
-        # Set the fixed Y position
-        rock_position.y = rock_y_position
+        # Use noise for random perpendicular offset
+        var perp_noise = noise.get_noise_2d(i * 0.1, 0)
+        var side_offset = perp_noise * 300.0  # 300 unit spread
         
-        # Position rock with variation
-        side_offset = randf_range(-rock_side_variance, rock_side_variance)        
-        rock_position.y = rock_y_position
-
-        # Create rock
-        var rock = rock_scene.instantiate()
-        add_child(rock)
+        # Calculate perpendicular direction for random offset
+        var perpendicular = Vector3(-tangent.z, 0, tangent.x).normalized()
         
-        rock.global_position = rock_position
-        rock.rotation_degrees = Vector3(randf_range(0, 360), randf_range(0, 360), randf_range(0, 360))
-       
-        var scale_factor = randf_range(0.6, 1.4)
-        rock.scale = Vector3.ONE * scale_factor
+        # Final position with noise-based offset
+        var final_position = path_position + (perpendicular * side_offset)
         
+        var orb = orb_scene.instantiate()
+        add_child(orb)
+        orb.global_position = final_position + Vector3(0, orb_y_position, 0)
+        orb.collected.connect(_on_orb_collected)
+ 
+        
+# Add this method to LevelGenerator:
+func _on_orb_collected(_orb, speed_amount):
+    if player_path_follow:
+        player_path_follow.increase_speed(speed_amount)

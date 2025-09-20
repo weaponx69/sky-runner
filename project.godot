@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Skyrunner"
 run/main_scene="uid://cngl1lob1i0my"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -68,6 +68,14 @@ ui_down={
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":12,"pressure":0.0,"pressed":false,"script":null)
 , Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":1,"axis_value":1.0,"script":null)
 ]
+}
+ui_a={
+"deadzone": 0.2,
+"events": []
+}
+ui_d={
+"deadzone": 0.2,
+"events": []
 }
 
 [physics]
