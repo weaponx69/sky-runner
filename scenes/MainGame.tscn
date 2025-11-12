@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=14 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
+[ext_resource type="PackedScene" uid="uid://bgiuihdbo6qhi" path="res://scenes/Space-Chunk.tscn" id="2_x628s"]
 [ext_resource type="Script" uid="uid://dd0h7f0f4fb0a" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
-[ext_resource type="Script" uid="uid://w0hpjrww4vgc" path="res://scripts/PlayerPathFollow.gd" id="3_p73vr"]
+[ext_resource type="Script" uid="uid://bfw8sqiparajl" path="res://scripts/SmoothCamera.gd" id="4_7fyak"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1hpqh"]
@@ -38,6 +39,13 @@ fog_depth_end = 1000.0
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7f7ne"]
 bg_color = Color(0.793546, 0.183792, 0.507222, 1)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fpdtd"]
+albedo_color = Color(0, 0, 1, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1hpqh"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_7f7ne"]
+
 [node name="MainGame" type="Node3D"]
 
 [node name="Sun" type="DirectionalLight3D" parent="."]
@@ -50,18 +58,7 @@ environment = SubResource("Environment_rtryj")
 
 [node name="OrbGenerator" type="Node3D" parent="."]
 script = ExtResource("2_xej52")
-
-[node name="Path3D" type="Path3D" parent="."]
-
-[node name="PlayerPathFollow" type="PathFollow3D" parent="Path3D"]
-rotation_mode = 0
-script = ExtResource("3_p73vr")
-
-[node name="Angel" parent="Path3D/PlayerPathFollow" instance=ExtResource("1_xej52")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1, 2)
-
-[node name="RayCast3D" type="RayCast3D" parent="Path3D/PlayerPathFollow/Angel"]
-target_position = Vector3(0, 0, -2)
+chunk_scenes = Array[PackedScene]([ExtResource("2_x628s")])
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 script = ExtResource("6_7fyak")
@@ -115,3 +112,27 @@ offset_right = 669.0
 offset_bottom = -130.0
 grow_horizontal = 2
 grow_vertical = 0
+
+[node name="ObstacleContainer" type="Node3D" parent="."]
+
+[node name="Angel" parent="." instance=ExtResource("1_xej52")]
+
+[node name="PlayerMesh2" type="MeshInstance3D" parent="Angel"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_fpdtd")
+mesh = SubResource("CylinderMesh_1hpqh")
+
+[node name="PlayerCollision2" type="CollisionShape3D" parent="Angel"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_7f7ne")
+
+[node name="SpringArm3D2" type="SpringArm3D" parent="Angel"]
+transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 2, -0.555582)
+spring_length = 6.0
+script = ExtResource("4_7fyak")
+
+[node name="Camera3D" type="Camera3D" parent="Angel/SpringArm3D2"]
+transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 2, 30)
+current = true
+
+[node name="_Node3D_57078" type="Node3D" parent="Angel"]

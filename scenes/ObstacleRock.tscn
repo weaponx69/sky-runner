@@ -1,10 +1,18 @@
-[gd_scene load_steps=2 format=3 uid="uid://btnw2kumrleu3"]
+[gd_scene load_steps=4 format=3 uid="uid://btnw2kumrleu3"]
 
 [ext_resource type="Script" uid="uid://clb6mr8nwkflx" path="res://scripts/ObstacleRock.gd" id="1_622fq"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_622fq"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_622fq"]
 
 [node name="ObstacleRock" type="Area3D"]
 script = ExtResource("1_622fq")
 
 [node name="RockMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, 0, 0)
+mesh = SubResource("BoxMesh_622fq")
 
 [node name="RockCollision" type="CollisionShape3D" parent="."]
+transform = Transform3D(3.5, 0, 0, 0, 3.5, 0, 0, 0, 3.5, 0, 0, 0)
+shape = SubResource("BoxShape3D_622fq")
