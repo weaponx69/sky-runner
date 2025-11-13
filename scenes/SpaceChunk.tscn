@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bgiuihdbo6qhi"]
 
-[ext_resource type="Script" uid="uid://dn38xm2ofqpt8" path="res://scenes/SpaceChunkSpawner.gd" id="1_limms"]
+[ext_resource type="Script" uid="uid://dn38xm2ofqpt8" path="res://scripts/SpaceChunkSpawner.gd" id="1_limms"]
 
 [node name="SpaceChunk" type="Node3D"]
 
