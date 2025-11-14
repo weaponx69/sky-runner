@@ -1,33 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites id="2025-09-04" name="report_1" tests="5" failures="3" skipped="0" flaky="0" time="0.000">
-	<testsuite id="0" name="LevelGeneratorTest" package="test" timestamp="2025-09-04T07:53:52" hostname="localhost" tests="5" failures="3" errors="0" skipped="0" flaky="0" time="0.576">
-		<testcase name="test_initialization_calculates_player_width" classname="LevelGeneratorTest" time="0.041">
-		</testcase>
-		<testcase name="test_generate_path_segment_adds_points_to_curve" classname="LevelGeneratorTest" time="0.070">
-		</testcase>
-		<testcase name="test_spawn_items_on_path_spawns_orbs" classname="LevelGeneratorTest" time="0.248">
-			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
+<testsuites id="2025-11-13" name="report_1" tests="2" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="TestSpaceChunkSpawner" package="test" timestamp="2025-11-13T23:16:27" hostname="localhost" tests="2" failures="0" errors="2" skipped="0" flaky="0" time="0.069">
+		<testcase name="test_density_survival_rate" classname="TestSpaceChunkSpawner" time="0.021">
+			<error message="ERROR: res://test/TestSpaceChunkSpawner.gd:41" type="ABORT">
 <![CDATA[
-Expecting to be greater than:
- '83' but was '83'
+Godot Runtime Error !
+	'at: test_density_survival_rate (res://test/TestSpaceChunkSpawner.gd:41)'
+Error: 'Invalid access to property or key 'content_free_zone_reduction' on a base object of type 'Nil'.'
 ]]>
-			</failure>
-			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
-<![CDATA[
-Expecting to be greater than:
- '85' but was '85'
-]]>
-			</failure>
-			<failure message="FAILED: res://test/LevelGeneratorTest.gd:-1" type="FAILURE">
-<![CDATA[
-Expecting to be greater than:
- '75' but was '75'
-]]>
-			</failure>
+			</error>
 		</testcase>
-		<testcase name="test_cleanup_old_items_removes_passed_items" classname="LevelGeneratorTest" time="0.098">
-		</testcase>
-		<testcase name="test_orb_pooling_recycles_orbs" classname="LevelGeneratorTest" time="0.035">
+		<testcase name="test_uniform_z_placement" classname="TestSpaceChunkSpawner" time="0.021">
+			<error message="ERROR: res://test/TestSpaceChunkSpawner.gd:67" type="ABORT">
+<![CDATA[
+Godot Runtime Error !
+	'at: test_uniform_z_placement (res://test/TestSpaceChunkSpawner.gd:67)'
+Error: 'Invalid assignment of property or key 'spawn_volume_z' with value of type 'float' on a base object of type 'Nil'.'
+]]>
+			</error>
 		</testcase>
 	</testsuite>
 </testsuites>
