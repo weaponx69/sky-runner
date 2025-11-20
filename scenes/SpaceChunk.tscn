@@ -1,10 +1,14 @@
-[gd_scene load_steps=2 format=3 uid="uid://bgiuihdbo6qhi"]
+[gd_scene load_steps=4 format=3 uid="uid://bgiuihdbo6qhi"]
 
 [ext_resource type="Script" uid="uid://dn38xm2ofqpt8" path="res://scripts/SpaceChunkSpawner.gd" id="1_limms"]
+[ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_cmqaw"]
+[ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="3_y67d8"]
 
 [node name="SpaceChunk" type="Node3D"]
 
 [node name="SpaceChunk" type="Node3D" parent="."]
 script = ExtResource("1_limms")
+orb_scene = ExtResource("2_cmqaw")
+obstacle_scene = ExtResource("3_y67d8")
 
 [node name="EndAnchor" type="Marker3D" parent="SpaceChunk"]

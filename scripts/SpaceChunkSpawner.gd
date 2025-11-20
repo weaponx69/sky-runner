@@ -1,72 +1,108 @@
-# res://scripts/SpaceChunkSpawner.gd
-# FINAL VERSION: Applies uniform probability reduction for sparse content across the entire chunk.
+# Space Chunk Spawner Script (Attach this to your Chunk Scenes)
+
 extends Node3D
 
-# --- REQUIRED TEMPLATE SCENES (Must be set in the Inspector) ---
-@export var orb_scene: PackedScene = preload("res://scenes/Orb3D.tscn")
-@export var rock_scene: PackedScene = preload("res://scenes/Rock.tscn")
+# --- EXTERNAL SCENES (Set these in the Godot Inspector) ---
+@export var orb_scene: PackedScene 
+@export var obstacle_scene: PackedScene 
 
-# --- CUSTOMIZATION PARAMETERS ---
-# NOTE: Orb/Rock counts are controlled by the LevelGenerator.gd script.
-@export var rock_min_scale: float = 0.5   # Smallest rock size
-@export var rock_max_scale: float = 2.0   # Largest rock size
+# --- SPAWN VOLUME ---
+@export_group("Spawn Volume")
+@export var spawn_volume_x: float = 10.0 # Width (X-axis) of the spawning zone
+@export var spawn_volume_y: float = 10.0 # Height (Y-axis) of the spawning zone
+@export var spawn_volume_z: float = 100.0 # Length/depth (Z-axis) of the spawning zone
 
-@export var spawn_volume_x: float = 10.0   # Left/right spread
-@export var spawn_volume_y: float = 8.0    # Up/down spread
-@export var spawn_volume_z: float = 180.0  # Length along the flight path
+@export_group("Continuous Spawning")
+@export var orb_spawn_interval: float = 0.5 # Time in seconds between orb spawns
+@export var rock_spawn_interval: float = 1.5 # Time in seconds between rock spawns
 
-# This variable is now the probability of DELETION across the ENTIRE CHUNK (0.95 = 95% empty space)
-@export var content_free_zone_reduction: float = 0.95 
-# The orb_z_start logic is now defunct and has been removed from the function.
+# --- INTERNAL VARIABLES ---
+var orb_timer: Timer
+var rock_timer: Timer
+var generator: Node3D = null # Reference to LevelGenerator
 
-# --- CORE FUNCTIONALITY ---
+# --- PUBLIC METHOD CALLED BY LEVEL GENERATOR ---
 
-func _ready():
-    # The LevelGenerator calls spawn_objects() directly after instantiation.
-    pass 
+func spawn_objects(_orb_count_unused: int, _rock_count_unused: int):
+    """
+    Initializes timers to begin continuous spawning within this chunk's volume.
+    The LevelGenerator calls this once per chunk, and this script handles the loop.
+    """
+    # 1. Find the Level Generator using the group (requires LevelGenerator to be in 'level_manager' group)
+    generator = get_tree().get_first_node_in_group("level_manager")
+    if generator == null:
+        push_error("Chunk Spawner cannot find LevelGenerator in 'level_manager' group.")
+        # We allow it to continue running, but it won't know the game state
+    
+    # 2. Setup Orb Timer for Continuous Spawning
+    if orb_timer == null:
+        orb_timer = Timer.new()
+        orb_timer.wait_time = orb_spawn_interval
+        orb_timer.autostart = true
+        orb_timer.timeout.connect(_on_orb_timer_timeout)
+        add_child(orb_timer)
+    
+    # 3. Setup Rock Timer for Continuous Obstacle Spawning
+    if rock_timer == null:
+        rock_timer = Timer.new()
+        rock_timer.wait_time = rock_spawn_interval
+        rock_timer.autostart = true
+        rock_timer.timeout.connect(_on_rock_timer_timeout)
+        add_child(rock_timer)
+    
+    # Ensure timers are running
+    orb_timer.start()
+    rock_timer.start()
+    
+func _on_orb_timer_timeout():
+    # Only spawn if the game is actually running
+    var is_game_running = true
+    if is_instance_valid(generator):
+        is_game_running = generator.is_game_running
+        
+    if is_game_running:
+        _spawn_entity(orb_scene, "orbs")
 
-# This function is called directly by LevelGenerator.gd with calculated counts.
-func spawn_objects(orb_count_to_spawn: int, rock_count_to_spawn: int):
-    # Stop if objects are already spawned
-    if get_child_count() > 2: # Root + EndAnchor
+func _on_rock_timer_timeout():
+    # Only spawn if the game is actually running
+    var is_game_running = true
+    var chunks_spawned = 0
+    if is_instance_valid(generator):
+        is_game_running = generator.is_game_running
+        chunks_spawned = generator.chunks_spawned
+    
+    if is_game_running:
+        # Simple difficulty gating: only spawn obstacles after the player has survived 5 chunks
+        if chunks_spawned > 5:
+            _spawn_entity(obstacle_scene, "obstacles")
+
+func _spawn_entity(scene: PackedScene, group_name: String):
+    """Helper function to instantiate and place a single entity."""
+    if not is_instance_valid(scene):
+        push_error("Spawn scene is not set for %s! Check the Chunk Scene Inspector." % group_name)
         return
-
-    # Spawn Orbs using the passed-in count
-    for i in range(orb_count_to_spawn):
-        spawn_object(orb_scene)
         
-    # Spawn Rocks using the passed-in count
-    for i in range(rock_count_to_spawn):
-        spawn_object(rock_scene)
+    var new_entity = scene.instantiate()
+    
+    # 1. Random Placement within the chunk's volume
+    var rand_x = randf_range(-spawn_volume_x / 2.0, spawn_volume_x / 2.0)
+    var rand_y = randf_range(-spawn_volume_y / 2.0, spawn_volume_y / 2.0)
+    
+    # 2. Place along the Z-axis (length of the chunk)
+    # Spawn in the far third of the chunk volume to give the player time to react
+    var rand_z = randf_range(-spawn_volume_z * 0.7, -spawn_volume_z * 0.3)
+    
+    new_entity.position = Vector3(rand_x, rand_y, rand_z)
+    
+    # 3. Add entity as a child of this chunk
+    add_child(new_entity)
+    new_entity.add_to_group(group_name)
 
-
-func spawn_object(scene: PackedScene):
-    var instance = scene.instantiate()
-    
-    # 1. Apply Random Scaling (Only to Rocks)
-    if scene == rock_scene:
-        var random_scale_factor = randf_range(rock_min_scale, rock_max_scale)
-        instance.scale = Vector3(random_scale_factor, random_scale_factor, random_scale_factor)
-        
-    # 2. Calculate Z-coordinate across the ENTIRE chunk length
-    var end_z_range = spawn_volume_z
-    
-    # Random position calculation
-    var rand_x = randf_range(-spawn_volume_x, spawn_volume_x)
-    var rand_y = randf_range(-spawn_volume_y, spawn_volume_y)
-    
-    # Z is now random across the full length (from -end_z_range to 0)
-    var rand_z = randf_range(-end_z_range, 0.0) 
-
-    # --- CRITICAL LOGIC: Apply Density Reduction Uniformly Across Chunk ---
-    # This check now governs the sparseness for ALL objects across 100% of the volume.
-    if randf() < content_free_zone_reduction:
-        instance.queue_free() # Delete the instance with a 95% probability
-        return 
-    # ------------------------------------------------------------------------
-    
-    # 3. Position and add the node
-    instance.position = Vector3(rand_x, rand_y, rand_z)
-    
-    # Make the new node a child of the SpaceChunk root Node3D
-    add_child(instance)
+# Stop timers when the chunk is removed
+func _exit_tree():
+    if is_instance_valid(orb_timer):
+        orb_timer.stop()
+        orb_timer.queue_free()
+    if is_instance_valid(rock_timer):
+        rock_timer.stop()
+        rock_timer.queue_free()

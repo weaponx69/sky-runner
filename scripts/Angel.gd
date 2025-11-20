@@ -1,6 +1,6 @@
-# res://scripts/Angel.gd
-# FINAL VERSION: Direct movement, speed decay, and public accessors for compatibility
-extends Area3D
+# Angel Player Script (Attach to a CharacterBody3D node)
+
+extends CharacterBody3D
 
 # Signals
 signal speed_changed(new_speed: float)
@@ -10,143 +10,109 @@ signal speed_changed(new_speed: float)
 @onready var spring_arm = $SpringArm3D
 @onready var player_mesh = $PlayerMesh
 
-# Exported Properties
+# --- EXPORTED PROPERTIES ---
+@export_group("Control & Health")
 @export var turn_speed: float = 3.0
-@export var max_h_offset := 20.0
-@export var h_move_speed := 15.0
-@export var max_health := 100
-@export var damage_amount := 25
+@export var max_h_offset: float = 20.0
+@export var h_move_speed: float = 15.0
+@export var max_health: int = 100
+@export var damage_amount: int = 25
 
-@export var speed :=30
-@export var min_speed := 20
-@export var speed_decay := 1.0
-@export var max_speed := 60.0
+@export_group("Speed Decay Mechanics")
+@export var speed: float = 30.0
+@export var min_speed: float = 20.0
+@export var speed_decay: float = 1.0
+@export var max_speed: float = 60.0
 
-# State Management
-enum Lane {LEFT=1, CENTER=0, RIGHT=-1}
-enum State {RUNNING, JUMPING, SLIDING, DEAD}
+# --- STATE MANAGEMENT ---
+var current_health: int = max_health
 
-var targetLane : int = Lane.CENTER
-var currentLane : int = Lane.CENTER
-
-var current_health := max_health
-var target_h_offset := 0.0
-var target_yaw: float = 0.0
-var velocity := Vector3.ZERO
-
+# --- GODOT LIFECYCLE ---
 
 func _ready():
-    set_process_mode(Node.PROCESS_MODE_ALWAYS)
-    camera.make_current()
+    # 1. Ensure this node is in the 'player' group for collision detection
+    add_to_group("player")
     
-    # Setup
-    collision_layer = 1
-    collision_mask = 1
-    monitoring = true
-    monitorable = true
-    area_entered.connect(_on_area_entered)
+    # 2. Camera Setup
+    if camera:
+        camera.make_current()
+        camera.position = Vector3(0, 0, 30)
+        camera.rotation_degrees = Vector3(0, 0, 0)
     
-    # Camera setup (FIXED TO REMOVE TILT)
-    spring_arm.position = Vector3(0, 2, 0)
-    
-    # FIX: Ensure the SpringArm has no pitch, yaw, or roll
-    spring_arm.rotation_degrees = Vector3(0, 0, 0)
-    
-    camera.position = Vector3(0, 0, 30)
-    
-    # FIX: Ensure the Camera has no pitch, yaw, or roll
-    camera.rotation_degrees = Vector3(0, 0, 0)
+    if spring_arm:
+        spring_arm.position = Vector3(0, 2, 0)
+        spring_arm.rotation_degrees = Vector3(0, 0, 0)
 
-
-func take_damage(amount):
+func take_damage(amount: int):
     current_health = max(current_health - amount, 0)
     print("Health: ", current_health)
     if current_health <= 0:
-        game_over()
+        _trigger_game_over()
 
- 
-func game_over():
-    print("Game Over!")
+func _trigger_game_over():
+    """Triggers the game over sequence by calling the Level Generator."""
+    print("Game Over! Speed or Health reached zero.")
     
-    # 1. Check if the node is still valid and has access to the SceneTree
-    if not is_instance_valid(self) or not is_inside_tree():
-        print("Angel node is not in the tree or invalid; cannot proceed with game_over.")
-        return
-    
-    # 2. Get the tree only after validation
-    var tree = get_tree()
-    if not tree:
-        return
-        
-    # Stop the game
-    tree.paused = true
-    
-    await tree.create_timer(2.0).timeout
-    tree.reload_current_scene() # Restart the level
+    # Find the Level Generator/Game Manager using the group
+    var generator = get_tree().get_first_node_in_group("level_manager")
+    if generator and generator.has_method("_game_over"):
+        generator._game_over()
+    else:
+        # Fallback to reload if generator is missing
+        get_tree().paused = true
+        await get_tree().create_timer(2.0).timeout
+        get_tree().reload_current_scene()
 
-
-func _process(delta):
-    var input_dir = Input.get_axis("ui_right", "ui_left")
-    
-    # Corrected: Multiply input_dir by -1 to reverse movement direction.
-    target_h_offset = clamp(
-        target_h_offset + (-input_dir) * h_move_speed * delta, 
-        -max_h_offset, 
-        max_h_offset
-    )
-
-    # Yaw steering input (currently unused for movement)
-    var steer = 0.0
-    if Input.is_physical_key_pressed(KEY_Q):
-        steer -= 90.0 * delta
-    if Input.is_physical_key_pressed(KEY_E):
-        steer += 90.0 * delta
-    target_yaw += steer
-
+func _process(_delta):
+    # Placeholder for future cosmetic updates (e.g. banking animation)
+    pass
 
 func _physics_process(delta):
-    # --- Speed Decay Logic ---
+    # 1. Speed Decay (The core inverse runner mechanic)
     speed = max(min_speed, speed - speed_decay * delta)
     speed_changed.emit(speed) # Emit signal to update UI
-    # -------------------------
-
-    # 1. Forward Movement
-    velocity = -transform.basis.z * speed
     
-    # 2. Horizontal Movement (Interpolate to target_h_offset on the X-axis)
-    var current_x = global_position.x
-    var new_x = lerp(current_x, target_h_offset, 10.0 * delta)
-    
-    # 3. Apply the movement
-    global_position += velocity * delta
-    global_position.x = new_x
+    # Check for game over condition based on speed decay
+    if speed <= min_speed:
+        _trigger_game_over()
 
-## Public Accessors (for LevelGenerator and UI)
+    # 2. Forward Movement (Always forward along the local Z axis)
+    velocity.z = -speed
+    
+    # 3. Horizontal Movement (Reading WASD/UI input for strafing)
+    var input_dir_x = Input.get_axis("ui_left", "ui_right")
+    var input_dir_y = Input.get_axis("ui_down", "ui_up")
+    
+    # Calculate lateral velocity (X and Y movement based on WASD)
+    velocity.x = input_dir_x * h_move_speed
+    velocity.y = input_dir_y * h_move_speed
+
+    # 4. Apply Physics Movement and Collision
+    move_and_slide()
+    
+    # 5. Apply Boundary Checks
+    _apply_boundaries()
+
+func _apply_boundaries():
+    var new_pos = global_position
+    var half_width = max_h_offset 
+    
+    new_pos.x = clampf(new_pos.x, -half_width, half_width)
+    
+    var half_height = half_width 
+    new_pos.y = clampf(new_pos.y, -half_height, half_height) 
+    
+    global_position = new_pos
+
+# --- PUBLIC METHODS FOR ORB INTERACTION ---
+
+func increase_speed(amount: float):
+    """Called by the Orb script to instantly restore forward momentum."""
+    speed = min(max_speed, speed + amount)
+    speed_changed.emit(speed)
 
 func get_speed() -> float:
     return speed
 
-func set_speed(new_speed: float):
-    speed = min(max_speed, max(min_speed, new_speed))
-    speed_changed.emit(speed)
-    
-func get_min_speed() -> float:
-    return min_speed
-
 func get_max_speed() -> float:
     return max_speed
-
-## Collision Handling
-
-func _on_area_entered(area):
-    if area.is_in_group("orbs"):
-        # Increase speed and clamp it to max_speed
-        var speed_increase_amount = 1.0 
-        speed = min(max_speed, speed + speed_increase_amount)
-        speed_changed.emit(speed) # Emit signal to update UI
-        print("Angel: Speed increased to ", speed)
-        
-        area.queue_free()
-    elif area.is_in_group("obstacles"):
-        take_damage(damage_amount)
-        area.queue_free()

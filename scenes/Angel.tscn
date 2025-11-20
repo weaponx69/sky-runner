@@ -10,7 +10,7 @@ albedo_color = Color(0, 0, 1, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nvp8c"]
 
-[node name="Angel" type="Area3D" groups=["player"]]
+[node name="Angel" type="CharacterBody3D" groups=["player"]]
 collision_mask = 2
 script = ExtResource("1_cqiqw")
 
