@@ -1,6 +1,6 @@
 # Angel Player Script
-# FIX: Auto-Aim now prioritizes objects in front over objects to the side.
-# FIX: Strictly ignores objects that are alongside or behind the player.
+# FIX: Added 'aim_cone_angle' to strictly ignore objects outside a forward field of view.
+# FIX: Increased lateral distance penalty to stop targeting orbs on the far sides.
 
 extends CharacterBody3D
 
@@ -19,6 +19,8 @@ signal speed_changed(new_speed: float)
 
 @export_group("Auto-Aim Tuning")
 @export var auto_aim_range: float = 60.0 
+# NEW: Field of View for targeting. 90 = Wide, 30 = Narrow Tunnel Vision.
+@export var aim_cone_angle: float = 30.0 
 @export var auto_aim_strength: float = 0.5 
 @export var distance_weight: float = 1.0 
 @export var alignment_weight: float = 3.0 
@@ -133,32 +135,45 @@ func _get_weighted_aim_vector(user_input: Vector2) -> Vector2:
     var best_orb = null
     var best_score = -INF 
     
+    # Calculate the cone threshold (Dot product value)
+    # cos(45 deg) = 0.707. Higher angle = lower dot threshold.
+    var cone_dot_threshold = cos(deg_to_rad(aim_cone_angle))
+    
     for orb in orbs:
         if not is_instance_valid(orb): continue
         
         # 1. Range Check (Strict Forward Only)
-        var dz = orb.global_position.z - global_position.z
+        var to_orb = orb.global_position - global_position
         
-        # FIX: Orb must be at least 2 meters in front (dz < -2.0)
-        # This filters out things beside or behind the player
-        if dz >= -2.0 or abs(dz) > auto_aim_range:
-            continue
+        # Must be in front (Negative Z relative to player direction)
+        # Since we move -Z, objects in front have lower Z. Vector z must be < 0.
+        # We enforce -2.0 to ignore objects we are practically touching/passing.
+        if to_orb.z > -2.0: continue
+        
+        # Must be within max range
+        if to_orb.length_squared() > auto_aim_range * auto_aim_range: continue
+        
+        # 2. Cone Check (The "Tunnel Vision" Fix)
+        # Compare direction to orb vs Forward vector (0,0,-1)
+        var dir_to_orb = to_orb.normalized()
+        var forward_dot = Vector3.FORWARD.dot(dir_to_orb) # Vector3.FORWARD is (0,0,-1) in Godot
+        
+        if forward_dot < cone_dot_threshold:
+            continue # Outside the vision cone, ignore completely
             
-        var diff_3d = orb.global_position - global_position
-        var dir_to_orb = Vector2(diff_3d.x, diff_3d.y).normalized()
-        
         # --- SCORING LOGIC ---
         
-        # A. Weighted Distance (Biased Forward)
-        # We multiply X distance by 2.0 to make side objects "feel" farther away.
-        # This prioritizes objects straight ahead.
-        var weighted_dist_sq = (diff_3d.x * diff_3d.x * 4.0) + (diff_3d.z * diff_3d.z)
+        # A. Weighted Distance (Heavily penalize side distance)
+        # Multiply X/Y distance by 10.0 effectively making them "farther"
+        var weighted_dist_sq = (to_orb.x * to_orb.x * 10.0) + (to_orb.y * to_orb.y * 10.0) + (to_orb.z * to_orb.z)
         var dist_score = 1000.0 / max(1.0, weighted_dist_sq)
         
-        # B. Alignment Factor
+        # B. Alignment Factor (User Input)
         var align_factor = 0.0
+        var dir_to_orb_2d = Vector2(dir_to_orb.x, dir_to_orb.y).normalized()
+        
         if user_input.length_squared() > 0.1:
-            align_factor = user_input.normalized().dot(dir_to_orb)
+            align_factor = user_input.normalized().dot(dir_to_orb_2d)
         
         # C. Final Weighted Score
         var score = (dist_score * distance_weight) + (align_factor * alignment_weight * 100.0)
@@ -170,8 +185,8 @@ func _get_weighted_aim_vector(user_input: Vector2) -> Vector2:
     current_target = best_orb
             
     if best_orb:
-        var target_dir_3d = (best_orb.global_position - global_position).normalized()
-        return Vector2(target_dir_3d.x, target_dir_3d.y)
+        var target_dir = (best_orb.global_position - global_position).normalized()
+        return Vector2(target_dir.x, target_dir.y)
     
     return Vector2.ZERO
 
