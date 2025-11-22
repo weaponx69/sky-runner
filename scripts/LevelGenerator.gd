@@ -1,118 +1,133 @@
-# Space Chunk Spawner Script (Attach this to your Chunk Scenes)
-# FIX: Removed strict typing on 'generator' to fix the parsing error that hid the Inspector slots.
-# FIX: Implemented continuous timer-based spawning for steady orb flow.
+# LevelGenerator.gd
+# FIX: Game Over stops gameplay logic but keeps the engine running (No Pause).
+# FIX: Manages global difficulty (chunks_spawned) for the spawners.
 
 extends Node3D
 
-# --- EXTERNAL SCENES (Set these in the Godot Inspector) ---
-@export var orb_scene: PackedScene 
-@export var obstacle_scene: PackedScene 
+# --- GAME STATE ---
+@export var scroll_speed: float = 30.0 
+var distance: float = 0.0
+var is_game_running: bool = false
 
-# --- SPAWN VOLUME ---
-@export_group("Spawn Volume")
-@export var spawn_volume_x: float = 10.0 # Width (X-axis) of the spawning zone
-@export var spawn_volume_y: float = 10.0 # Height (Y-axis) of the spawning zone
-@export var spawn_volume_z: float = 100.0 # Length/depth (Z-axis) of the spawning zone
+# --- SCENE REFERENCES ---
+@export_group("Scene Management")
+@export var chunk_scenes: Array[PackedScene] 
+@export var orb_scene: PackedScene          
+@export var obstacle_scene: PackedScene     
 
-@export_group("Continuous Spawning")
-@export var orb_spawn_interval: float = 0.5 # Time in seconds between orb spawns
-@export var rock_spawn_interval: float = 1.5 # Time in seconds between rock spawns
+# --- CHUNK CONFIG ---
+@export var initial_chunk_count: int = 4
+@export var despawn_distance: float = 50.0
+@export var spawn_trigger_distance: float = 100.0
 
-# --- INTERNAL VARIABLES ---
-var orb_timer: Timer
-var rock_timer: Timer
-
-# FIX: Removed ": Node3D" type hint. This allows us to access custom properties 
-# like 'is_game_running' without causing an editor parsing error.
-var generator = null 
+# --- VARIABLES ---
+const ChunkSpawnerScript = preload("res://scripts/SpaceChunkSpawner.gd")
+var player_node: Node3D
+var last_chunk_end: Marker3D = null 
+var spawned_chunks: Array[Node3D] = [] 
+var chunks_spawned: int = 0 
 
 func _ready():
-    # Debug check to help you see if slots are empty
-    if not orb_scene:
-        push_warning("SpaceChunkSpawner: 'Orb Scene' slot is empty in Inspector!")
-    if not obstacle_scene:
-        push_warning("SpaceChunkSpawner: 'Obstacle Scene' slot is empty in Inspector!")
-
-# --- PUBLIC METHOD CALLED BY LEVEL GENERATOR ---
-
-func spawn_objects(_orb_count_unused: int, _rock_count_unused: int):
-    """
-    Initializes timers to begin continuous spawning within this chunk's volume.
-    """
-    # 1. Find the Level Generator using the group
-    generator = get_tree().get_first_node_in_group("level_manager")
-    if generator == null:
-        push_error("Chunk Spawner cannot find LevelGenerator in 'level_manager' group.")
-        return
-
-    # 2. Setup Orb Timer for Continuous Spawning
-    if orb_timer == null:
-        orb_timer = Timer.new()
-        orb_timer.wait_time = orb_spawn_interval
-        orb_timer.autostart = true
-        orb_timer.timeout.connect(_on_orb_timer_timeout)
-        add_child(orb_timer)
+    add_to_group("level_manager")
+    randomize()
     
-    # 3. Setup Rock Timer for Continuous Obstacle Spawning
-    if rock_timer == null:
-        rock_timer = Timer.new()
-        rock_timer.wait_time = rock_spawn_interval
-        rock_timer.autostart = true
-        rock_timer.timeout.connect(_on_rock_timer_timeout)
-        add_child(rock_timer)
-    
-    # Ensure timers are running
-    orb_timer.start()
-    rock_timer.start()
-    
-func _on_orb_timer_timeout():
-    # Only spawn if the game is actually running
-    var is_running = false
-    if is_instance_valid(generator):
-        # We can now access this property safely because generator is dynamic
-        is_running = generator.is_game_running
-        
-    if is_running:
-        _spawn_entity(orb_scene, "orbs")
-
-func _on_rock_timer_timeout():
-    var is_running = false
-    var chunks_count = 0
-    
-    if is_instance_valid(generator):
-        is_running = generator.is_game_running
-        chunks_count = generator.chunks_spawned
-    
-    if is_running:
-        # Simple difficulty gating: only spawn obstacles after 5 chunks
-        if chunks_count > 5:
-            _spawn_entity(obstacle_scene, "obstacles")
-
-func _spawn_entity(scene: PackedScene, group_name: String):
-    """Helper function to instantiate and place a single entity."""
-    if not is_instance_valid(scene):
+    player_node = get_tree().get_first_node_in_group("player") 
+    if not player_node:
+        push_error("LevelGenerator: Player node not found!")
+        set_process(false)
         return
         
-    var new_entity = scene.instantiate()
+    initialize_world()
     
-    # 1. Random Placement within the chunk's volume
-    var rand_x = randf_range(-spawn_volume_x / 2.0, spawn_volume_x / 2.0)
-    var rand_y = randf_range(-spawn_volume_y / 2.0, spawn_volume_y / 2.0)
-    
-    # 2. Place along the Z-axis (length of the chunk)
-    var rand_z = randf_range(-spawn_volume_z * 0.7, -spawn_volume_z * 0.3)
-    
-    new_entity.position = Vector3(rand_x, rand_y, rand_z)
-    
-    # 3. Add entity as a child of this chunk
-    add_child(new_entity)
-    new_entity.add_to_group(group_name)
+    # Auto-start
+    print("Level Generator: Ready. Starting...")
+    start_game() 
 
-# Stop timers when the chunk is removed
-func _exit_tree():
-    if is_instance_valid(orb_timer):
-        orb_timer.stop()
-        orb_timer.queue_free()
-    if is_instance_valid(rock_timer):
-        rock_timer.stop()
-        rock_timer.queue_free()
+func _process(delta):
+    if not is_instance_valid(player_node): return
+        
+    if is_game_running:
+        # 1. Update Distance
+        distance += scroll_speed * delta 
+        
+        # 2. Check for new chunks
+        if is_instance_valid(last_chunk_end):
+            var dist = player_node.global_position.distance_to(last_chunk_end.global_position)
+            if dist < spawn_trigger_distance:
+                spawn_new_chunk(last_chunk_end.global_position, last_chunk_end.global_transform.basis)
+
+        # 3. Despawn old chunks
+        if spawned_chunks.size() > 0:
+            var first = spawned_chunks[0]
+            if player_node.global_position.z - first.global_position.z > despawn_distance:
+                remove_chunk(first)
+
+func initialize_world():
+    for chunk in spawned_chunks: chunk.queue_free()
+    spawned_chunks.clear()
+    chunks_spawned = 0
+    last_chunk_end = null
+    
+    var pos = Vector3.ZERO
+    var basis = Basis()
+    for i in range(initial_chunk_count):
+        spawn_new_chunk(pos, basis)
+        if is_instance_valid(last_chunk_end):
+            pos = last_chunk_end.global_position
+            basis = last_chunk_end.global_transform.basis
+
+func spawn_new_chunk(pos: Vector3, basis: Basis):
+    if chunk_scenes.is_empty(): return
+    
+    chunks_spawned += 1
+    
+    var random_scene = chunk_scenes.pick_random()
+    var new_chunk = random_scene.instantiate()
+    
+    if new_chunk.get_script() == null:
+        new_chunk.set_script(ChunkSpawnerScript)
+    
+    add_child(new_chunk)
+    new_chunk.global_position = pos
+    new_chunk.global_transform.basis = basis
+    spawned_chunks.append(new_chunk)
+    
+    # Start Spawner
+    if new_chunk.has_method("spawn_objects"):
+        new_chunk.spawn_objects(0, 0)
+    
+    # Connect Signals
+    var end = new_chunk.find_child("EndAnchor", true, false)
+    if end: 
+        last_chunk_end = end
+        connect_orb_signals(new_chunk)
+
+func connect_orb_signals(chunk):
+    for child in chunk.get_children():
+        if child.is_in_group("orbs") and child.has_signal("collected"):
+            child.collected.connect(_on_orb_collected_bridge)
+
+func remove_chunk(chunk):
+    spawned_chunks.erase(chunk)
+    chunk.queue_free()
+
+func _on_orb_collected_bridge(_orb, speed_amount):
+    distance += 50.0 # Bonus score
+    if is_instance_valid(player_node) and player_node.has_method("increase_speed"):
+        player_node.increase_speed(speed_amount)
+
+func _game_over():
+    if not is_game_running: return
+    print("--- GAME ENDED --- Final Distance: ", int(distance))
+    
+    # Stop Gameplay Logic
+    is_game_running = false
+    set_process(false)
+    
+    # Do NOT pause the tree (animations can continue if desired), just stop logic.
+    get_tree().paused = false
+
+func start_game():
+    is_game_running = true
+    distance = 0.0
+    set_process(true)

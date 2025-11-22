@@ -1,8 +1,10 @@
-[gd_scene load_steps=14 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=16 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
+[ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_7fyak"]
 [ext_resource type="PackedScene" uid="uid://bgiuihdbo6qhi" path="res://scenes/SpaceChunk.tscn" id="2_x628s"]
 [ext_resource type="Script" uid="uid://dd0h7f0f4fb0a" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
+[ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="3_fpdtd"]
 [ext_resource type="Script" uid="uid://bfw8sqiparajl" path="res://scripts/SmoothCamera.gd" id="4_7fyak"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
 
@@ -59,6 +61,8 @@ environment = SubResource("Environment_rtryj")
 [node name="LevelGenerator" type="Node3D" parent="."]
 script = ExtResource("2_xej52")
 chunk_scenes = Array[PackedScene]([ExtResource("2_x628s")])
+orb_scene = ExtResource("2_7fyak")
+obstacle_scene = ExtResource("3_fpdtd")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 script = ExtResource("6_7fyak")
