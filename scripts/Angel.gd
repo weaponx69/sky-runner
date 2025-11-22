@@ -1,6 +1,6 @@
 # Angel Player Script
-# FIX: Refactored Auto-Aim to use a weighted score (Alignment vs Distance).
-# FIX: Allows player to override "Closest" logic by steering towards specific orbs.
+# FIX: Auto-Aim now prioritizes objects in front over objects to the side.
+# FIX: Strictly ignores objects that are alongside or behind the player.
 
 extends CharacterBody3D
 
@@ -20,10 +20,7 @@ signal speed_changed(new_speed: float)
 @export_group("Auto-Aim Tuning")
 @export var auto_aim_range: float = 60.0 
 @export var auto_aim_strength: float = 0.5 
-# NEW: How much "Points" an orb gets for being close (0.0 - 10.0)
 @export var distance_weight: float = 1.0 
-# NEW: How much "Points" an orb gets for being looked at (0.0 - 10.0)
-# Set this HIGHER than distance_weight to prioritize aiming over proximity.
 @export var alignment_weight: float = 3.0 
 
 @export_group("Space Flight Feel")
@@ -38,9 +35,17 @@ signal speed_changed(new_speed: float)
 @export var max_speed: float = 60.0
 @export var min_speed_threshold: float = 5.0 
 
+@export_group("Debug")
+@export var show_debug_line: bool = true 
+
 # --- STATE ---
 var speed: float = 30.0
 var is_game_active: bool = true
+var current_target: Node3D = null 
+
+# --- VISUALS ---
+var aim_line_mesh: ImmediateMesh
+var aim_line_node: MeshInstance3D
 
 func _ready():
     add_to_group("player")
@@ -54,12 +59,38 @@ func _ready():
     if spring_arm:
         spring_arm.position = Vector3(0, 2, 0)
         spring_arm.rotation_degrees = Vector3(0, 0, 0)
+        
+    _setup_aim_line()
+
+func _setup_aim_line():
+    aim_line_mesh = ImmediateMesh.new()
+    aim_line_node = MeshInstance3D.new()
+    aim_line_node.mesh = aim_line_mesh
+    aim_line_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+    
+    var mat = StandardMaterial3D.new()
+    mat.albedo_color = Color(1, 0, 0, 1)
+    mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    
+    aim_line_node.material_override = mat
+    add_child(aim_line_node)
+
+func _process(_delta):
+    aim_line_mesh.clear_surfaces()
+    
+    if show_debug_line and is_instance_valid(current_target):
+        aim_line_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+        aim_line_mesh.surface_add_vertex(Vector3.ZERO)
+        var target_local = to_local(current_target.global_position)
+        aim_line_mesh.surface_add_vertex(target_local)
+        aim_line_mesh.surface_end()
 
 func _physics_process(delta):
     if not is_game_active:
         return
 
-    # 1. Logarithmic-like Speed Decay
+    # 1. Speed Decay
     var decay_factor = clampf(speed / max_speed, 0.0, 1.0)
     var current_decay = speed_decay * decay_factor
     current_decay = max(current_decay, 0.5)
@@ -80,7 +111,7 @@ func _physics_process(delta):
     var target_vel_x = target_dir.x * h_move_speed
     var target_vel_y = target_dir.y * h_move_speed
 
-    # PHYSICS: Apply Inertia
+    # Inertia
     if target_dir.length() > 0.01:
         velocity.x = lerp(velocity.x, target_vel_x, acceleration * delta)
         velocity.y = lerp(velocity.y, target_vel_y, acceleration * delta)
@@ -88,12 +119,12 @@ func _physics_process(delta):
         velocity.x = lerp(velocity.x, 0.0, friction * delta)
         velocity.y = lerp(velocity.y, 0.0, friction * delta)
 
-    # 4. Apply Visual Banking
+    # Banking
     if player_mesh:
         var target_roll = - (velocity.x / h_move_speed) * deg_to_rad(bank_angle)
         player_mesh.rotation.z = lerp(player_mesh.rotation.z, target_roll, bank_speed * delta)
 
-    # 5. Apply Physics
+    # Physics
     move_and_slide()
     _apply_boundaries()
 
@@ -105,35 +136,38 @@ func _get_weighted_aim_vector(user_input: Vector2) -> Vector2:
     for orb in orbs:
         if not is_instance_valid(orb): continue
         
-        # 1. Range Check
+        # 1. Range Check (Strict Forward Only)
         var dz = orb.global_position.z - global_position.z
-        # Only consider orbs in front (dz < 0) and within max range
-        if dz >= 0 or abs(dz) > auto_aim_range:
+        
+        # FIX: Orb must be at least 2 meters in front (dz < -2.0)
+        # This filters out things beside or behind the player
+        if dz >= -2.0 or abs(dz) > auto_aim_range:
             continue
             
         var diff_3d = orb.global_position - global_position
         var dir_to_orb = Vector2(diff_3d.x, diff_3d.y).normalized()
         
-        # --- NEW SCORING LOGIC ---
+        # --- SCORING LOGIC ---
         
-        # A. Distance Factor (0.0 to 1.0)
-        # 1.0 = Right in front of face. 0.0 = At max range.
-        var dist = diff_3d.length()
-        var dist_factor = 1.0 - clampf(dist / auto_aim_range, 0.0, 1.0)
+        # A. Weighted Distance (Biased Forward)
+        # We multiply X distance by 2.0 to make side objects "feel" farther away.
+        # This prioritizes objects straight ahead.
+        var weighted_dist_sq = (diff_3d.x * diff_3d.x * 4.0) + (diff_3d.z * diff_3d.z)
+        var dist_score = 1000.0 / max(1.0, weighted_dist_sq)
         
-        # B. Alignment Factor (-1.0 to 1.0)
-        # 1.0 = You are pressing directly towards it.
+        # B. Alignment Factor
         var align_factor = 0.0
         if user_input.length_squared() > 0.1:
             align_factor = user_input.normalized().dot(dir_to_orb)
         
         # C. Final Weighted Score
-        # We multiply factors by Inspector weights to decide importance
-        var score = (dist_factor * distance_weight) + (align_factor * alignment_weight)
+        var score = (dist_score * distance_weight) + (align_factor * alignment_weight * 100.0)
         
         if score > best_score:
             best_score = score
             best_orb = orb
+    
+    current_target = best_orb
             
     if best_orb:
         var target_dir_3d = (best_orb.global_position - global_position).normalized()
@@ -147,8 +181,6 @@ func _apply_boundaries():
     new_pos.x = clampf(new_pos.x, -limit, limit)
     new_pos.y = clampf(new_pos.y, -limit, limit) 
     global_position = new_pos
-
-# --- MOMENTUM METHODS ---
 
 func increase_speed(amount: float):
     if not is_game_active: return
@@ -173,6 +205,5 @@ func _trigger_game_over():
     if generator and generator.has_method("_game_over"):
         generator._game_over()
 
-# --- GETTERS ---
 func get_speed() -> float: return speed
 func get_max_speed() -> float: return max_speed
