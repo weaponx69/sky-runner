@@ -7,4 +7,4 @@ extends SpringArm3D
 ## Called every frame. The `_process` function is intentionally left empty as the `SpringArm3D` handles all camera movement.
 # - `_delta`: The time elapsed since the previous frame.
 func _process(_delta):
-	pass
+    pass

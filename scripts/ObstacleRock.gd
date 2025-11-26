@@ -6,9 +6,9 @@ extends Area3D
 
 ## Called when the node is added to the scene. Sets up the collision layer and mask for the obstacle.
 func _ready():
-	collision_layer = 1  # Obstacles on layer 1
-	collision_mask = 1   # Detect player on layer 1
-	add_to_group("obstacles")
+    collision_layer = 1  # Obstacles on layer 1
+    collision_mask = 1   # Detect player on layer 1
+    add_to_group("obstacles")
 
-	# Optional: Add visual feedback
-	print("Obstacle rock ready for collision")
+    # Optional: Add visual feedback
+    print("Obstacle rock ready for collision")
