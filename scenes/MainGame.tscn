@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cngl1lob1i0my"]
+[gd_scene load_steps=17 format=3 uid="uid://cngl1lob1i0my"]
 
 [ext_resource type="PackedScene" uid="uid://cv7gq0ipmdfww" path="res://scenes/Angel.tscn" id="1_xej52"]
 [ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_7fyak"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://dd0h7f0f4fb0a" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
 [ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="3_fpdtd"]
 [ext_resource type="Script" uid="uid://bfw8sqiparajl" path="res://scripts/SmoothCamera.gd" id="4_7fyak"]
+[ext_resource type="PackedScene" uid="uid://bs2m04sasy368" path="res://scenes/Ghost.tscn" id="5_1hpqh"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1hpqh"]
@@ -63,6 +64,7 @@ script = ExtResource("2_xej52")
 chunk_scenes = Array[PackedScene]([ExtResource("2_x628s")])
 orb_scene = ExtResource("2_7fyak")
 obstacle_scene = ExtResource("3_fpdtd")
+ghost_scene = ExtResource("5_1hpqh")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 script = ExtResource("6_7fyak")
@@ -120,14 +122,16 @@ grow_vertical = 0
 [node name="ObstacleContainer" type="Node3D" parent="."]
 
 [node name="Angel" parent="." instance=ExtResource("1_xej52")]
+motion_mode = 1
+min_target_distance = 30.0
+max_speed = 160.0
 
 [node name="PlayerMesh2" type="MeshInstance3D" parent="Angel"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+visible = false
 material_override = SubResource("StandardMaterial3D_fpdtd")
 mesh = SubResource("CylinderMesh_1hpqh")
 
 [node name="PlayerCollision2" type="CollisionShape3D" parent="Angel"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
 shape = SubResource("CapsuleShape3D_7f7ne")
 
 [node name="SpringArm3D2" type="SpringArm3D" parent="Angel"]

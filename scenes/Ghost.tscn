@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://bs2m04sasy368"]
+
+[ext_resource type="Script" uid="uid://hmlfvfxr07wr" path="res://Ghost.gd" id="1_k73yw"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_k73yw"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_d6xk1"]
+
+[node name="Ghost" type="Area3D"]
+script = ExtResource("1_k73yw")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_k73yw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_d6xk1")
