@@ -124,6 +124,7 @@ grow_vertical = 0
 [node name="Angel" parent="." instance=ExtResource("1_xej52")]
 motion_mode = 1
 min_target_distance = 30.0
+show_debug_line = false
 max_speed = 160.0
 
 [node name="PlayerMesh2" type="MeshInstance3D" parent="Angel"]

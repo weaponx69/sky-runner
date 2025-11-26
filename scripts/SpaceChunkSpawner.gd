@@ -5,6 +5,10 @@
 # given probability, creating a "mixed stream" of collectibles and enemies.
 extends Node3D
 
+@export_group("Debug Path Visuals")
+@export var show_path_debug: bool = true
+@export var path_debug_color: Color = Color(0.1, 0.8, 0.1) # Green path line
+
 # --- EXTERNAL SCENES ---
 ## The `PackedScene` for the orb collectibles.
 @export var orb_scene: PackedScene
@@ -47,6 +51,35 @@ func _ready():
 # - `_u2`: Unused parameter.
 func spawn_objects(_u1, _u2):
     spawn_objects_with_difficulty(0.0)
+    
+func _draw_path_debug(all_nodes: Array[Node3D]):
+    if not show_path_debug: return
+    if all_nodes.is_empty(): return
+    
+    var debug_mesh = ImmediateMesh.new()
+    var mesh_instance = MeshInstance3D.new()
+    
+    var mat = StandardMaterial3D.new()
+    mat.albedo_color = path_debug_color
+    mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    
+    mesh_instance.mesh = debug_mesh
+    mesh_instance.material_override = mat
+    mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+    
+    add_child(mesh_instance)
+    
+    debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+    
+    # Draw a line from each node to its designated 'next_node'
+    for node in all_nodes:
+        if is_instance_valid(node) and node.next_node != null:
+            debug_mesh.surface_add_vertex(node.global_position)
+            debug_mesh.surface_add_vertex(node.next_node.global_position)
+
+    debug_mesh.surface_end()
+
 
 ## The main entry point for spawning objects, called by the `LevelGenerator`.
 # Spawns a mixed stream of orbs and ghosts, and a separate stream of rocks.
@@ -54,16 +87,24 @@ func spawn_objects(_u1, _u2):
 func spawn_objects_with_difficulty(ghost_chance: float):
     if not is_instance_valid(generator): return
 
+    # 1. Spawn The Rail (Orbs mixed with Ghosts)
     var orb_ref = generator.orb_scene
     var ghost_ref = generator.ghost_scene
-    _spawn_mixed_linear_stream(orb_ref, ghost_ref, "orbs", orb_spacing, 0.0, ghost_chance)
+    var rail_nodes = _spawn_mixed_linear_stream(orb_ref, ghost_ref, "orbs", orb_spacing, 0.0, ghost_chance)
     
+    # 2. Spawn Rocks (Scattered obstacles)
     var rock_ref = generator.obstacle_scene
     var chunks = generator.chunks_spawned
     
     if chunks > 3:
         var current_rock_spacing = max(min_rock_spacing, rock_spacing - (chunks * 1.0))
-        _spawn_linear_stream(rock_ref, "obstacles", current_rock_spacing, 15.0)
+        var _rock_nodes = _spawn_linear_stream(rock_ref, "obstacles", current_rock_spacing, 15.0)
+    
+    # 3. CRITICAL: Link the generated nodes now that all nodes are present
+    _link_chunk_nodes(rail_nodes)
+    
+    # 4. NEW: Draw the resulting connected path
+    _draw_path_debug(rail_nodes)
 
 # --- SPAWNING LOGIC ---
 
@@ -74,9 +115,10 @@ func spawn_objects_with_difficulty(ghost_chance: float):
 # - `spacing`: The distance between objects in the stream.
 # - `z_offset_start`: The starting offset on the Z-axis.
 # - `alt_chance`: The probability of spawning the alternative scene.
-func _spawn_mixed_linear_stream(main_scene: PackedScene, alt_scene: PackedScene, group: String, spacing: float, z_offset_start: float, alt_chance: float):
-    if not is_instance_valid(main_scene): return
+func _spawn_mixed_linear_stream(main_scene: PackedScene, alt_scene: PackedScene, group: String, spacing: float, z_offset_start: float, alt_chance: float) -> Array[Node3D]:
+    if not is_instance_valid(main_scene): return []
     
+    var created_nodes: Array[Node3D] = [] # NEW: Array to hold all PathNodes
     var current_z = -z_offset_start
     
     while current_z > -spawn_volume_z:
@@ -101,7 +143,12 @@ func _spawn_mixed_linear_stream(main_scene: PackedScene, alt_scene: PackedScene,
         add_child(ent)
         ent.add_to_group(final_group)
         
+        # NEW: Add the created entity to the array
+        created_nodes.append(ent)
+        
         current_z -= spacing
+        
+    return created_nodes # NEW: Return the list of nodes
 
 ## Spawns a stream of a single type of object, such as rocks.
 # - `scene`: The `PackedScene` to spawn.
@@ -129,3 +176,33 @@ func _spawn_linear_stream(scene: PackedScene, group: String, spacing: float, z_o
         ent.add_to_group(group)
         
         current_z -= spacing
+## Links all PathNodes in the current chunk based on closest forward distance.
+func _link_chunk_nodes(all_nodes: Array[Node3D]):
+    if all_nodes.is_empty(): return
+    
+    # Iterate through every PathNode in the chunk
+    for node in all_nodes:
+        if not node.has_method("get_instance_id"): continue # Skip non-PathNodes
+
+        var nearest_node = null
+        var min_forward_dist = INF
+        
+        # Check every other node as a potential candidate for the 'next_node'
+        for candidate in all_nodes:
+            if node == candidate: continue
+            
+            # The candidate must be forward of the current node
+            var diff_z = candidate.global_position.z - node.global_position.z
+            
+            # We only look for nodes that are significantly forward (negative Z difference)
+            if diff_z < -1.0:
+                var dist = node.global_position.distance_to(candidate.global_position)
+                
+                # Check if this candidate is closer than the current 'nearest'
+                if dist < min_forward_dist:
+                    min_forward_dist = dist
+                    nearest_node = candidate
+
+        # Assign the closest forward node as the next in the path
+        if nearest_node:
+            node.next_node = nearest_node

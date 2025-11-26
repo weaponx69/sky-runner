@@ -423,7 +423,7 @@ func _pick_nearest_forward_orb():
     var best_orb = null
     var min_dist = INF
 
-    for orb in orbs:
+    for orb in orbs: 
         if not is_instance_valid(orb): continue
         var dz = orb.global_position.z - global_position.z
 
