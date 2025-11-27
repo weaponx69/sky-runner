@@ -34,6 +34,7 @@ signal speed_changed(new_speed: float)
 @export var h_move_speed: float = 15.0
 
 @export_group("Auto-Pathing")
+@export var auto_select_path: bool = true
 ## The maximum distance at which the angel will scan for orbs.
 @export var scan_distance: float = 200.0
 ## Orbs closer than this distance will be ignored. This acts as a forward "deadzone" to prevent the angel from targeting orbs that are too close or behind it.
@@ -323,34 +324,37 @@ func _calculate_flight_target() -> Vector3:
 
 ## Finds the best orb to target based on a scoring system that prioritizes orbs that are ahead of the angel and close to the center of the screen.
 func _update_auto_path():
-    # Only run this function if we have lost the current target (e.g., collected it)
-    if is_instance_valid(current_orb_target):
-        return
-
-    var orbs = get_tree().get_nodes_in_group("orbs")
-    var best_orb = null
-    var best_score = INF
-
-    for orb in orbs:
-        if not is_instance_valid(orb): continue
-
-        var diff = orb.global_position - global_position
-        var dz = diff.z
-
-        # 1. Forward Check (Must be far enough ahead)
-        if dz > -min_target_distance: continue
-        if abs(dz) > scan_distance: continue
-
-        # 2. Score: Prioritize Center > Side
-        var forward_dist = abs(dz)
-        var lateral_dist = Vector2(diff.x, diff.y).length()
-        var score = forward_dist + (lateral_dist * center_bias)
-
-        if score < best_score:
-            best_score = score
-            best_orb = orb
-
-    current_orb_target = best_orb
+    # Only proceed if auto-selection is enabled AND we don't already have a target.
+    #if not auto_select_path or is_instance_valid(current_orb_target):
+    #if not is_instance_valid(current_orb_target):
+        #return
+#
+    #var orbs = get_tree().get_nodes_in_group("orbs")
+    #var best_orb = null
+    #var best_score = INF
+    #
+    #for orb in orbs:
+        #if not is_instance_valid(orb): continue
+        #
+        #var diff = orb.global_position - global_position
+        #var dz = diff.z
+        #
+        ## Strict Forward Check: Must be significantly in front (> min_target_distance)
+        #if dz > -min_target_distance: continue 
+        ## Max Range Check
+        #if abs(dz) > scan_distance: continue
+        #
+        ## Score: Prioritize Center > Side
+        #var forward_dist = abs(dz)
+        #var lateral_dist = Vector2(diff.x, diff.y).length()
+        #var score = forward_dist + (lateral_dist * center_bias)
+        #
+        #if score < best_score:
+            #best_score = score
+            #best_orb = orb
+            #
+    #current_orb_target = best_orb
+    pass
 
 
 # --- MOMENTUM METHODS ---
@@ -366,6 +370,7 @@ func increase_speed(amount: float):
     current_orb_target = null
     _update_auto_path()
 
+
 ## Decreases the angel's speed by a given amount. If the speed drops below a certain threshold, the game ends.
 #
 # - `amount`: The amount to decrease the speed by.
@@ -377,6 +382,7 @@ func decrease_speed(amount: float):
         speed = 0
         velocity = Vector3.ZERO # Ensure velocity is zero immediately
         _trigger_game_over()
+
 
 ## Ends the game.
 func _trigger_game_over():
@@ -416,9 +422,10 @@ func _update_keyboard_logic():
         _pick_nearest_forward_orb()
 
 
-
 ## Picks the nearest orb that is in front of the angel.
 func _pick_nearest_forward_orb():
+    if not use_mouse_input: 
+        return
     var orbs = get_tree().get_nodes_in_group("orbs")
     var best_orb = null
     var min_dist = INF
