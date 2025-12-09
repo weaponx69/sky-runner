@@ -5,9 +5,9 @@
 [ext_resource type="PackedScene" uid="uid://bgiuihdbo6qhi" path="res://scenes/SpaceChunk.tscn" id="2_x628s"]
 [ext_resource type="Script" uid="uid://dd0h7f0f4fb0a" path="res://scripts/LevelGenerator.gd" id="2_xej52"]
 [ext_resource type="PackedScene" uid="uid://be750v2kqnyrj" path="res://scenes/Rock.tscn" id="3_fpdtd"]
-[ext_resource type="Script" uid="uid://bfw8sqiparajl" path="res://scripts/SmoothCamera.gd" id="4_7fyak"]
 [ext_resource type="PackedScene" uid="uid://bs2m04sasy368" path="res://scenes/Ghost.tscn" id="5_1hpqh"]
 [ext_resource type="Script" uid="uid://cxtx43yjt5fyv" path="res://scripts/UI.gd" id="6_7fyak"]
+[ext_resource type="Script" uid="uid://b1e2wcy37rr2p" path="res://scripts/DynamicCamera.gd" id="9_7f7ne"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1hpqh"]
 sky_top_color = Color(0.639216, 0.839216, 1, 1)
@@ -123,8 +123,9 @@ grow_vertical = 0
 
 [node name="Angel" parent="." instance=ExtResource("1_xej52")]
 motion_mode = 1
-auto_select_path = false
 min_target_distance = 30.0
+model_rotation_offset = 0.0
+start_speed = 20.0
 max_speed = 160.0
 
 [node name="PlayerMesh2" type="MeshInstance3D" parent="Angel"]
@@ -133,15 +134,13 @@ material_override = SubResource("StandardMaterial3D_fpdtd")
 mesh = SubResource("CylinderMesh_1hpqh")
 
 [node name="PlayerCollision2" type="CollisionShape3D" parent="Angel"]
+visible = false
 shape = SubResource("CapsuleShape3D_7f7ne")
 
-[node name="SpringArm3D2" type="SpringArm3D" parent="Angel"]
-transform = Transform3D(1, 0, 0, 0, 1.0000002, 0, 0, 0, 1.0000002, 0, 2, -0.555582)
-spring_length = 6.0
-script = ExtResource("4_7fyak")
-
-[node name="Camera3D" type="Camera3D" parent="Angel/SpringArm3D2"]
-transform = Transform3D(1, 0, 0, 0, 0.99999976, 0, 0, 0, 0.99999976, 0, 2, 30)
-current = true
-
 [node name="_Node3D_57078" type="Node3D" parent="Angel"]
+visible = false
+
+[node name="Camera3D" type="Camera3D" parent="Angel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0000005, 29.444426)
+current = true
+script = ExtResource("9_7f7ne")

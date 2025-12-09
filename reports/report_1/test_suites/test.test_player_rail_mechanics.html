@@ -34,12 +34,12 @@
 		<div class="report-container">
 			<h1>Testsuite Report</h1>
 			<div>
-				<span class="label">res://test/LevelGeneratorTest.gd</span>
+				<span class="label">res://test/test_player_rail_mechanics.gd</span>
 			</div>
 			<div class="summary">
 				<div class="summary-item">
 					<span class="label">Tests</span>
-					<span class="value">5</span>
+					<span class="value">3</span>
 				</div>
 				<div class="summary-item">
 					<span class="label">Skipped</span>
@@ -51,7 +51,7 @@
 				</div>
 				<div class="summary-item">
 					<span class="label">Failures</span>
-					<span class="value">13</span>
+					<span class="value">3</span>
 				</div>
 				<div class="summary-item">
 					<span class="label">Orphans</span>
@@ -59,13 +59,13 @@
 				</div>
 				<div class="summary-item">
 					<span class="label">Duration</span>
-					<span class="value">214ms</span>
+					<span class="value">138ms</span>
 				</div>
 				<div class="success-rate">
-					<div class="check-icon status-error">✓</div>
+					<div class="check-icon status-failed">✓</div>
 					<div class="rate-text">
 						<span class="label">Success Rate</span>
-						<span class="value">100%</span>
+						<span class="value">0%</span>
 					</div>
 				</div>
 			</div>
@@ -73,7 +73,7 @@
 		<div class="breadcrumb">
 			<a href="../index.html"><span>All</span></a>
 			<a href="../path/test.html"><span>test</span></a>
-			<a class="active" href="#"><span>LevelGeneratorTest</span></a>
+			<a class="active" href="#"><span>test_player_rail_mechanics</span></a>
 		</div>
 	</header>
 
@@ -94,22 +94,13 @@
 					<tbody>
 						
 								<tr class="testcase-group">
-									<td>test_initialization_calculates_player_width</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td>test_player_moves_forward_on_rail</td>
+									<td><span class="status status-passed">PASSED</span></td>
 									<td>0</td>
 									<td>0</td>
-									<td>28ms</td>
+									<td>21ms</td>
 									<td class="report-column">
 										<pre>
-line 162: Godot Runtime Error !
-	'at: _init_ui_references (res://scripts/LevelGenerator.gd:162)'
-Error: 'Invalid access to property or key 'root' on a base object of type 'null instance'.'
-line 72: Godot Runtime Error !
-	'at: _ready (res://scripts/LevelGenerator.gd:72)'
-Error: 'Cannot call method 'get_first_node_in_group' on a null value.'
-line 68: Godot Runtime Error !
-	'at: LevelGeneratorTestSuite.test_initialization_calculates_player_width (res://test/LevelGeneratorTest.gd:68)'
-Error: 'Invalid access to property or key 'player_width' on a base object of type 'Node3D (LevelGenerator.gd)'.'
 
 										</pre>
 									</td>
@@ -117,22 +108,13 @@ Error: 'Invalid access to property or key 'player_width' on a base object of typ
 
 
 								<tr class="testcase-group">
-									<td>test_generate_path_segment_adds_points_to_curve</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td>test_player_converges_to_angled_path</td>
+									<td><span class="status status-passed">PASSED</span></td>
 									<td>0</td>
 									<td>0</td>
-									<td>36ms</td>
+									<td>21ms</td>
 									<td class="report-column">
 										<pre>
-line 162: Godot Runtime Error !
-	'at: _init_ui_references (res://scripts/LevelGenerator.gd:162)'
-Error: 'Invalid access to property or key 'root' on a base object of type 'null instance'.'
-line 72: Godot Runtime Error !
-	'at: _ready (res://scripts/LevelGenerator.gd:72)'
-Error: 'Cannot call method 'get_first_node_in_group' on a null value.'
-line 73: Godot Runtime Error !
-	'at: LevelGeneratorTestSuite.test_generate_path_segment_adds_points_to_curve (res://test/LevelGeneratorTest.gd:73)'
-Error: 'Invalid access to property or key 'curve' on a base object of type 'Node3D (LevelGenerator.gd)'.'
 
 										</pre>
 									</td>
@@ -140,62 +122,25 @@ Error: 'Invalid access to property or key 'curve' on a base object of type 'Node
 
 
 								<tr class="testcase-group">
-									<td>test_spawn_items_on_path_spawns_orbs</td>
-									<td><span class="status status-error">ERROR</span></td>
+									<td>test_dodge_offset_keeps_player_off_center</td>
+									<td><span class="status status-failed">FAILED</span></td>
 									<td>0</td>
 									<td>0</td>
-									<td>35ms</td>
+									<td>49ms</td>
 									<td class="report-column">
 										<pre>
-line 92: Godot Runtime Error !
-	'at: LevelGeneratorTestSuite.test_spawn_items_on_path_spawns_orbs (res://test/LevelGeneratorTest.gd:92)'
-Error: 'Invalid assignment of property or key 'obstacle_items' with value of type 'Array' on a base object of type 'Node3D (LevelGenerator.gd)'.'
-
-										</pre>
-									</td>
-								</tr>
-
-
-								<tr class="testcase-group">
-									<td>test_cleanup_old_items_removes_passed_items</td>
-									<td><span class="status status-error">ERROR</span></td>
-									<td>0</td>
-									<td>0</td>
-									<td>22ms</td>
-									<td class="report-column">
-										<pre>
-line 162: Godot Runtime Error !
-	'at: _init_ui_references (res://scripts/LevelGenerator.gd:162)'
-Error: 'Invalid access to property or key 'root' on a base object of type 'null instance'.'
-line 72: Godot Runtime Error !
-	'at: _ready (res://scripts/LevelGenerator.gd:72)'
-Error: 'Cannot call method 'get_first_node_in_group' on a null value.'
-line 117: Godot Runtime Error !
-	'at: LevelGeneratorTestSuite.test_cleanup_old_items_removes_passed_items (res://test/LevelGeneratorTest.gd:117)'
-Error: 'Invalid call. Nonexistent function 'generate_path_segment' in base 'Node3D (LevelGenerator.gd)'.'
-
-										</pre>
-									</td>
-								</tr>
-
-
-								<tr class="testcase-group">
-									<td>test_orb_pooling_recycles_orbs</td>
-									<td><span class="status status-error">ERROR</span></td>
-									<td>0</td>
-									<td>0</td>
-									<td>22ms</td>
-									<td class="report-column">
-										<pre>
-line 162: Godot Runtime Error !
-	'at: _init_ui_references (res://scripts/LevelGenerator.gd:162)'
-Error: 'Invalid access to property or key 'root' on a base object of type 'null instance'.'
-line 72: Godot Runtime Error !
-	'at: _ready (res://scripts/LevelGenerator.gd:72)'
-Error: 'Cannot call method 'get_first_node_in_group' on a null value.'
-line 136: Godot Runtime Error !
-	'at: LevelGeneratorTestSuite.test_orb_pooling_recycles_orbs (res://test/LevelGeneratorTest.gd:136)'
-Error: 'Invalid call. Nonexistent function 'get_orb_from_pool' in base 'Node3D (LevelGenerator.gd)'.'
+line 74: Expecting:
+ '-0.121542'
+ in range between
+ '-5.100000' <> '-4.900000'
+line 74: Expecting:
+ '-0.121542'
+ in range between
+ '-5.100000' <> '-4.900000'
+line 74: Expecting:
+ '-0.121542'
+ in range between
+ '-5.100000' <> '-4.900000'
 
 										</pre>
 									</td>
@@ -212,7 +157,7 @@ Error: 'Invalid call. Nonexistent function 'get_orb_from_pool' in base 'Node3D (
 	</main>
 
 	<footer>
-		<p>Generated by <a href="https://github.com/MikeSchulze/gdUnit4">GdUnit4</a> at 2025-12-08 00:40:52</p>
+		<p>Generated by <a href="https://github.com/MikeSchulze/gdUnit4">GdUnit4</a> at 2025-12-08 01:17:47</p>
 		<div class="status-legend">
 			<span class="status-legend-item">
 				<span class="status-box status-skipped"></span> Skipped

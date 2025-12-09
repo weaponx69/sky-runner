@@ -1,6 +1,5 @@
 # Orb Collectible Script
 # INHERITANCE: Inherits PathNode for rail connectivity.
-
 extends "res://scripts/PathNode.gd" 
 
 # Signals
@@ -24,15 +23,26 @@ func _ready():
     add_to_group("orbs") 
 
 func _process(delta):
-    # Visual spin
-    rotate_y(deg_to_rad(rotation_speed) * delta)
+    # Visual spin (only if not collected)
+    if visible:
+        rotate_y(deg_to_rad(rotation_speed) * delta)
 
 func _on_body_entered(body):
     if body.is_in_group("player"):
         if is_collectible:
-            # Notify the Level Generator (or player)
+            # 1. Mark as collected so we don't trigger twice
+            is_collectible = false 
+            
+            # 2. Notify the Level Generator / Player
             collected.emit(self, momentum_value)
-        
-        # When collected/touched, the Angel script handles switching to the next node.
-        queue_free()
-        
+            
+            # 3. FIX: Disable instead of Destroy
+            # We hide the mesh and disable collision, but KEEP the node in memory.
+            # This allows the Angel to read the 'neighbors' array from this node.
+            visible = false
+            set_deferred("monitoring", false)
+            set_deferred("monitorable", false)
+            
+            # NOTE: The LevelGenerator will automatically delete this node
+            # when the chunk goes off-screen.
+ 

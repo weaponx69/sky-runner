@@ -6,7 +6,7 @@
 extends Node3D
 
 @export_group("Debug Path Visuals")
-@export var show_path_debug: bool = true
+@export var show_path_debug: bool = false
 @export var path_debug_color: Color = Color(0.1, 0.8, 0.1) # Green path line
 
 # --- EXTERNAL SCENES ---
@@ -29,7 +29,7 @@ extends Node3D
 # --- SPACING SETTINGS (Distance) ---
 @export_group("Linear Spacing")
 ## The spacing between orbs on their "rail".
-@export var orb_spacing: float = 8.0
+@export var orb_spacing: float = 28.0
 ## The initial spacing between rocks.
 @export var rock_spacing: float = 25.0
 ## The minimum spacing for rocks, ensuring they don't get too dense.
@@ -38,6 +38,9 @@ extends Node3D
 # --- INTERNAL VARIABLES ---
 ## A reference to the level generator node.
 var generator = null
+# Tracks the current difficulty level (0.0 to 1.0)
+var current_difficulty: float = 0.0
+
 
 ## Called when the node enters the scene tree for the first time.
 # Initializes the reference to the level generator.
@@ -51,7 +54,12 @@ func _ready():
 # - `_u2`: Unused parameter.
 func spawn_objects(_u1, _u2):
     spawn_objects_with_difficulty(0.0)
-    
+
+## Sets the difficulty for this specific chunk. Called by LevelGenerator.
+func set_chunk_difficulty(factor: float):
+    current_difficulty = factor
+
+
 func _draw_path_debug(all_nodes: Array[Node3D]):
     if not show_path_debug: return
     if all_nodes.is_empty(): return
@@ -72,11 +80,13 @@ func _draw_path_debug(all_nodes: Array[Node3D]):
     
     debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
     
-    # Draw a line from each node to its designated 'next_node'
+    # Draw lines from each node to ALL its neighbors
     for node in all_nodes:
-        if is_instance_valid(node) and node.next_node != null:
-            debug_mesh.surface_add_vertex(node.global_position)
-            debug_mesh.surface_add_vertex(node.next_node.global_position)
+        if is_instance_valid(node) and "neighbors" in node:
+            for neighbor in node.neighbors:
+                if is_instance_valid(neighbor):
+                    debug_mesh.surface_add_vertex(node.global_position)
+                    debug_mesh.surface_add_vertex(neighbor.global_position)
 
     debug_mesh.surface_end()
 
@@ -176,33 +186,69 @@ func _spawn_linear_stream(scene: PackedScene, group: String, spacing: float, z_o
         ent.add_to_group(group)
         
         current_z -= spacing
-## Links all PathNodes in the current chunk based on closest forward distance.
+        
+
+## Links all PathNodes in the current chunk based on forward distance.
 func _link_chunk_nodes(all_nodes: Array[Node3D]):
     if all_nodes.is_empty(): return
     
     # Iterate through every PathNode in the chunk
     for node in all_nodes:
-        if not node.has_method("get_instance_id"): continue # Skip non-PathNodes
+        # Check if the node has the 'neighbors' array (from PathNode.gd)
+        if not "neighbors" in node: continue
 
-        var nearest_node = null
-        var min_forward_dist = INF
+        # Clear old neighbors to be safe
+        node.neighbors.clear()
         
-        # Check every other node as a potential candidate for the 'next_node'
+        # Check every other node as a potential connection
         for candidate in all_nodes:
             if node == candidate: continue
             
-            # The candidate must be forward of the current node
+            # 1. Forward Check: Candidate must be ahead of us (Negative Z)
             var diff_z = candidate.global_position.z - node.global_position.z
             
-            # We only look for nodes that are significantly forward (negative Z difference)
-            if diff_z < -1.0:
-                var dist = node.global_position.distance_to(candidate.global_position)
+            # 2. Distance Check: Connect anything within range (Creating a Web)
+            # We use a wider range (e.g. 40.0) so you have multiple options (Left/Right)
+            var dist = node.global_position.distance_to(candidate.global_position)
+            
+            if diff_z < -1.0 and dist < 40.0:
+                node.neighbors.append(candidate)
                 
-                # Check if this candidate is closer than the current 'nearest'
-                if dist < min_forward_dist:
-                    min_forward_dist = dist
-                    nearest_node = candidate
+                # NEW: Populate this specific path with danger
+                _spawn_hazards_on_link(node, candidate)
 
-        # Assign the closest forward node as the next in the path
-        if nearest_node:
-            node.next_node = nearest_node
+
+## Spawns obstacles directly on the path between two nodes to force dodging.
+func _spawn_hazards_on_link(node_a: Node3D, node_b: Node3D):
+    var start = node_a.global_position
+    var end = node_b.global_position
+    var dist = start.distance_to(end)
+    
+    # 1. REDUCE DENSITY: Increased spacing from 20.0 to 45.0
+    var rock_count = int(dist / 45.0) 
+    
+    if rock_count < 1: return
+
+    for i in range(1, rock_count + 1):
+        # 2. RANDOM CHANCE: Only spawn 40% of potential rocks
+        if randf() > 0.4: 
+            continue
+
+        # Calculate position
+        var t = float(i) / (rock_count + 1)
+        
+        # 3. SAFETY BUFFER: Don't spawn rocks within 10% of the start or end orb
+        if t < 0.1 or t > 0.9:
+            continue
+            
+        var spawn_pos = start.lerp(end, t)
+        
+        # Instantiate Rock
+        var rock = generator.obstacle_scene.instantiate()
+        add_child(rock)
+        rock.global_position = spawn_pos
+        rock.add_to_group("obstacles")
+        
+        # Offset Logic (Keep this so they aren't perfectly centered)
+        var offset_dir = Vector3(randf_range(-1, 1), randf_range(-1, 1), 0).normalized()
+        rock.global_position += offset_dir * randf_range(1.0, 3.0)

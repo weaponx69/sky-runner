@@ -7,13 +7,16 @@ extends Node3D
 
 # --- GAME STATE ---
 ## The speed at which the level scrolls.
-@export var scroll_speed: float = 30.0
 ## The distance the player has traveled.
 var distance: float = 0.0
 ## A boolean value that is true if the game is currently running, and false otherwise.
 var is_game_running: bool = false
+# Variable for the green debug web lines
+var debug_draw_imm: ImmediateMesh
 
 # --- SCENE REFERENCES ---
+@export var scroll_speed: float = 30.0
+@export var show_debug_web: bool = false
 @export_group("Scene Management")
 ## An array of `PackedScene`s that represent the different chunks of the level.
 @export var chunk_scenes: Array[PackedScene]
@@ -57,6 +60,7 @@ var chunks_spawned: int = 0
 var pause_menu: Control
 ## A reference to the game over label.
 var game_over_label: Label
+var last_spawned_chunk: Node3D = null
 
 ## Called when the node is added to the scene. Initializes the level generator, sets up the UI, and starts the game in a paused state.
 func _ready():
@@ -67,6 +71,22 @@ func _ready():
     randomize()
 
     _init_ui_references()
+
+    # --- SETUP DEBUG LINES ---
+    var mesh_instance = MeshInstance3D.new()
+    debug_draw_imm = ImmediateMesh.new()
+    mesh_instance.mesh = debug_draw_imm
+    mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+    
+    # Green unshaded material
+    var mat = StandardMaterial3D.new()
+    mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    mat.albedo_color = Color(0, 1, 0) # GREEN LINES
+    mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+    mesh_instance.material_override = mat
+    
+    add_child(mesh_instance)
+    # -------------------------
 
     player_node = get_tree().get_first_node_in_group("player")
     if not player_node:
@@ -81,8 +101,27 @@ func _ready():
     is_game_running = false
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-    # Show menu initially
     if pause_menu: pause_menu.visible = true
+
+## Draws green lines between connected orbs to visualize the web.
+func _draw_debug_web():
+    if not debug_draw_imm: return
+    
+    debug_draw_imm.clear_surfaces()
+    debug_draw_imm.surface_begin(Mesh.PRIMITIVE_LINES)
+    
+    for chunk in spawned_chunks:
+        for child in chunk.get_children():
+            # Check if it's an orb and has the 'neighbors' data
+            if child.is_in_group("orbs") and "neighbors" in child:
+                for neighbor in child.neighbors:
+                    if is_instance_valid(neighbor):
+                        # Draw line from Orb to Neighbor
+                        debug_draw_imm.surface_add_vertex(child.global_position)
+                        debug_draw_imm.surface_add_vertex(neighbor.global_position)
+    
+    debug_draw_imm.surface_end()
+
 
 ## Handles unhandled input events for pausing the game.
 #
@@ -167,13 +206,14 @@ func _init_ui_references():
 
 # --- CHUNK GENERATION ---
 
-## Initializes the world by spawning the initial chunks.
 func initialize_world():
+    # Clear old chunks
     for chunk in spawned_chunks: chunk.queue_free()
     spawned_chunks.clear()
     chunks_spawned = 0
     last_chunk_end = null
 
+    # Spawn new chunks
     var pos = Vector3.ZERO
     var spawn_basis = Basis()
     for i in range(initial_chunk_count):
@@ -181,11 +221,22 @@ func initialize_world():
         if is_instance_valid(last_chunk_end):
             pos = last_chunk_end.global_position
             spawn_basis = last_chunk_end.global_transform.basis
+            
+    # --- NEW FIX: Force assign the first target ---
+    # This ensures the player starts "Locked On" to the rail immediately
+    if spawned_chunks.size() > 0:
+        var first_chunk = spawned_chunks[0]
+        # Look for the first node in the "orbs" group
+        for child in first_chunk.get_children():
+            if child.is_in_group("orbs"):
+                if is_instance_valid(player_node):
+                    player_node.current_orb_target = child
+                    print("Level Generator: Initial target locked -> ", child.name)
+                break
+
 
 ## Spawns a new chunk at a given position and with a given basis.
-#
-# - `pos`: The position at which to spawn the chunk.
-# - `spawn_basis`: The basis to use for the chunk's transform.
+## Spawns a new chunk at a given position and with a given basis.
 func spawn_new_chunk(pos: Vector3, spawn_basis: Basis):
     if chunk_scenes.is_empty(): return
     chunks_spawned += 1
@@ -201,21 +252,40 @@ func spawn_new_chunk(pos: Vector3, spawn_basis: Basis):
     new_chunk.global_transform.basis = spawn_basis
     spawned_chunks.append(new_chunk)
 
+    # --- 1. CALCULATE DIFFICULTY ---
+    # 0.0 = Start, 1.0 = Max Difficulty (reached at 50 chunks)
+    var difficulty_factor = clampf(float(chunks_spawned) / 50.0, 0.0, 1.0)
+
+    # Pass this factor to the spawner so it knows how dense to make rocks
+    if new_chunk.has_method("set_chunk_difficulty"):
+        new_chunk.set_chunk_difficulty(difficulty_factor)
+    # -------------------------------
+
+    # --- 2. WIRE THE ORBS ---
+    _connect_orbs_in_chunk(new_chunk)
+    
+    if is_instance_valid(last_spawned_chunk):
+        _connect_chunks(last_spawned_chunk, new_chunk)
+        
+    last_spawned_chunk = new_chunk
+    
+    # Update visual lines
+    #_draw_debug_web() 
+    # --------------------------
+
     # Calculate current ghost probability
     var current_ghost_chance = min(max_ghost_chance, initial_ghost_chance + (chunks_spawned * difficulty_ramp))
 
-    # Pass difficulty info to Spawner
     if new_chunk.has_method("spawn_objects_with_difficulty"):
-        # We pass the calculated chance for the spawner to use
         new_chunk.spawn_objects_with_difficulty(current_ghost_chance)
     elif new_chunk.has_method("spawn_objects"):
-        # Fallback to base call if difficulty logic is disabled
         new_chunk.spawn_objects(0, 0)
 
     var end = new_chunk.find_child("EndAnchor", true, false)
     if end:
         last_chunk_end = end
         connect_orb_signals(new_chunk)
+
 
 ## Connects the `collected` signal of all orbs in a chunk to the `_on_orb_collected_bridge` function.
 #
@@ -225,6 +295,7 @@ func connect_orb_signals(chunk):
         if child.is_in_group("orbs") and child.has_signal("collected"):
             child.collected.connect(_on_orb_collected_bridge)
 
+
 ## Removes a chunk from the scene.
 #
 # - `chunk`: The chunk to remove.
@@ -232,14 +303,24 @@ func remove_chunk(chunk):
     spawned_chunks.erase(chunk)
     chunk.queue_free()
 
-## Called when an orb is collected. Increases the player's speed and distance.
-#
-# - `_orb`: The orb that was collected.
-# - `speed_amount`: The amount to increase the player's speed by.
+
+## Called when an orb is collected. Increases speed AND updates navigation.
+# - `_orb`: The orb node that was just hit (contains the neighbors data).
+# - `speed_amount`: How much speed to give.
 func _on_orb_collected_bridge(_orb, speed_amount):
+    # DEBUG PRINT
+    print("LevelGen: Signal Received from ", _orb.name)
+    
     distance += 50.0
-    if is_instance_valid(player_node) and player_node.has_method("increase_speed"):
-        player_node.increase_speed(speed_amount)
+    
+    if is_instance_valid(player_node):
+        if player_node.has_method("increase_speed"):
+            player_node.increase_speed(speed_amount)
+            
+        if player_node.has_method("find_next_target_from_neighbors"):
+            # Pass the orb to the player so they can find the next path
+            player_node.find_next_target_from_neighbors(_orb)
+
 
 ## Ends the game and displays the game over screen.
 func _game_over():
@@ -257,3 +338,53 @@ func _game_over():
     if pause_menu: pause_menu.visible = true
     if game_over_label:
         game_over_label.text = "GAME OVER\nDistance: " + str(int(distance))
+
+# --- WIRING LOGIC ---
+
+## 1. Internal Wiring: Connects orbs INSIDE the same chunk to each other.
+func _connect_orbs_in_chunk(chunk: Node3D):
+    var orbs = []
+    # Find all orbs
+    for child in chunk.get_children():
+        if child.is_in_group("orbs"):
+            # Initialize the neighbor array if it doesn't exist
+            if not "neighbors" in child:
+                child.set_meta("neighbors", []) # Fallback using metadata if script missing
+                # OR ideally your orb script has 'var neighbors = []'
+            orbs.append(child)
+
+    # Brute force check: If Orb B is ahead of Orb A and close, connect them.
+    for source in orbs:
+        for target in orbs:
+            if source == target: continue
+            
+            # Check Direction: Is target ahead? (Assuming -Z is forward)
+            var is_ahead = target.global_position.z < source.global_position.z
+            
+            # Check Distance: Is it reachable? (e.g. 60 units)
+            var dist = source.global_position.distance_to(target.global_position)
+            
+            if is_ahead and dist < 60.0:
+                # Add to neighbors list
+                if "neighbors" in source:
+                    source.neighbors.append(target)
+
+## 2. External Stitching: Connects the END of the old chunk to the START of the new one.
+func _connect_chunks(prev_chunk: Node3D, next_chunk: Node3D):
+    var prev_orbs = []
+    var next_orbs = []
+    
+    # Get orbs
+    for child in prev_chunk.get_children():
+        if child.is_in_group("orbs"): prev_orbs.append(child)
+    for child in next_chunk.get_children():
+        if child.is_in_group("orbs"): next_orbs.append(child)
+        
+    # Connect gaps
+    for p_orb in prev_orbs:
+        for n_orb in next_orbs:
+            var dist = p_orb.global_position.distance_to(n_orb.global_position)
+            # Allow a slightly larger gap between chunks (e.g. 80 units)
+            if dist < 80.0:
+                if "neighbors" in p_orb:
+                    p_orb.neighbors.append(n_orb)
