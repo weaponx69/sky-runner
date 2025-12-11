@@ -59,6 +59,23 @@ var locked_branch_target: Node3D = null
 @export var max_speed: float = 60.0
 @export var min_speed_threshold: float = 5.0
 
+# --- NEW ORB TARGETING EVOLUTION EXPORTS ---
+@export_group("Orb Targeting Evolution")
+@export var current_max_target_distance: float = 1500.0 # The actual distance used for targeting.
+@export var max_target_distance_increase_rate: float = 5.0 # Units per second the distance increases.
+@export var max_target_distance_cap: float = 5000.0 # Maximum possible target distance.
+
+# --- NEW CAMERA ZOOM EXPORTS ---
+@export_group("Camera Zoom")
+@export var default_camera_arm_length: float = 30.0 # Default length of the SpringArm
+@export var max_zoom_out_target_factor: float = 0.3 # Multiplies current_max_target_distance to get max zoom target.
+@export var camera_zoom_speed: float = 1.0 # Speed of camera interpolation
+
+# --- NEW: Camera Angle Zoom Exports ---
+@export var default_camera_angle_x: float = 0.0 # Default X rotation for spring arm (looking straight back)
+@export var zoomed_out_camera_angle_x: float = -10.0 # X rotation when fully zoomed out (looking down more, in degrees)
+@export var camera_angle_lerp_speed: float = 3.0 # Speed of angle interpolation
+
 # --- STATE ---
 var speed: float = 30.0
 var is_game_active: bool = true
@@ -72,20 +89,23 @@ var aim_line_node: MeshInstance3D
 var reticle_node: MeshInstance3D
 
 func _ready():
+    process_mode = Node.PROCESS_MODE_ALWAYS
     add_to_group("player")
     speed = start_speed
     is_game_active = true
     Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
     
     if player_mesh: player_mesh.rotation = Vector3.ZERO
-    
     if camera: 
         camera.make_current()
-        camera.position = Vector3(0, 0, 30)
+        camera.position = Vector3.ZERO # Camera is at spring arm's origin, spring arm handles length
         camera.rotation_degrees = Vector3.ZERO
     if spring_arm:
         spring_arm.position = Vector3(0, 2, 0)
-        spring_arm.rotation_degrees = Vector3.ZERO
+        spring_arm.rotation_degrees.x = default_camera_angle_x # Set initial X-angle
+        spring_arm.rotation_degrees.y = 0.0 # Revert Y rotation to 0 degrees
+        spring_arm.rotation_degrees.z = 0.0 # Ensure no roll rotation
+        spring_arm.spring_length = default_camera_arm_length # Set initial zoom via spring length
         
     _setup_visuals()
 
@@ -122,7 +142,7 @@ func _update_smart_reticle_target():
         
         # --- SAFEGUARD 1: GENERATION DISTANCE ---
         var dist = global_position.distance_to(orb.global_position)
-        if dist > scan_distance: continue
+        if dist > current_max_target_distance: continue
 
         # --- SAFEGUARD 2: VISIBILITY ---
         # Only lock onto what the camera can actually see
@@ -148,7 +168,6 @@ func _update_smart_reticle_target():
             
     # 3. Apply the Lock
     if best_match:
-        # print(">>> GLOBAL LOCK: Switched to ", best_match.name)
         locked_branch_target = best_match
         current_orb_target = best_match
         dodge_offset = Vector2.ZERO
@@ -276,6 +295,7 @@ func _process(delta):
     else:
         branch_line_node.visible = false
 
+
 # --- PHYSICS PROCESS ---
 func _physics_process(delta):
     if not is_game_active: return
@@ -284,7 +304,7 @@ func _physics_process(delta):
     var input_vector = Vector2.ZERO
     if Input.is_physical_key_pressed(KEY_A): input_vector.x -= 1.0
     if Input.is_physical_key_pressed(KEY_D): input_vector.x += 1.0
-    if Input.is_physical_key_pressed(KEY_W): input_vector.y += 1.0
+
     if Input.is_physical_key_pressed(KEY_S): input_vector.y -= 1.0
     
     if input_vector.length() > 1.0: input_vector = input_vector.normalized()
@@ -309,6 +329,23 @@ func _physics_process(delta):
     if dodge_offset.y < -max_dodge_offset or dodge_offset.y > max_dodge_offset:
         dodge_velocity.y *= -0.5
         dodge_offset.y = clampf(dodge_offset.y, -max_dodge_offset, max_dodge_offset)
+
+    # --- NEW: Update Orb Targeting Distance ---
+    current_max_target_distance = min(max_target_distance_cap, current_max_target_distance + max_target_distance_increase_rate * delta)
+
+    # --- NEW: Camera Zoom Logic with 'W' ---
+    var target_arm_length: float = default_camera_arm_length
+    var target_camera_angle_x: float = default_camera_angle_x # Declare target_camera_angle_x here
+    if Input.is_physical_key_pressed(KEY_W):
+        # When W is pressed, target a zoomed-out length that scales with current_max_target_distance
+        target_arm_length = current_max_target_distance * max_zoom_out_target_factor
+        target_camera_angle_x = zoomed_out_camera_angle_x
+    
+    # Smoothly interpolate the spring arm length
+    spring_arm.spring_length = lerp(spring_arm.spring_length, target_arm_length, camera_zoom_speed * delta)
+    
+    # --- NEW: Smoothly interpolate the camera X-angle ---
+    spring_arm.rotation_degrees.x = lerp(spring_arm.rotation_degrees.x, target_camera_angle_x, camera_angle_lerp_speed * delta)
 
     # --- 2. SPEED & MOMENTUM ---
     var decay_factor = clampf(speed / max_speed, 0.0, 1.0)
@@ -386,7 +423,6 @@ func _calculate_flight_target() -> Vector3:
 func find_next_target_from_neighbors(last_orb_visited: Node3D):
     # 1. CHECK LOCK: Did the player already select a branch with the reticle?
     if is_instance_valid(locked_branch_target) and locked_branch_target in last_orb_visited.neighbors:
-        print(">>> CONFIRMED: Taking selected branch -> ", locked_branch_target.name)
         current_orb_target = locked_branch_target
         dodge_offset = Vector2.ZERO
         
@@ -396,7 +432,6 @@ func find_next_target_from_neighbors(last_orb_visited: Node3D):
     
     # 2. Fallback Logic (if no lock was selected)
     if not "neighbors" in last_orb_visited or last_orb_visited.neighbors.is_empty():
-        print("Angel: No neighbors found. Scanning forward fallback.")
         _pick_nearest_forward_orb() 
         return
 
@@ -405,7 +440,6 @@ func find_next_target_from_neighbors(last_orb_visited: Node3D):
     var best_score = -INF 
     var rail_forward = Vector3(0, 0, -1)
 
-    print("--- SCANNING (Fallback) ---")
     for orb in candidates:
         if not is_instance_valid(orb): continue
         if orb.global_position.z > global_position.z + 2.0: continue
@@ -427,12 +461,11 @@ func find_next_target_from_neighbors(last_orb_visited: Node3D):
             best_orb = orb
 
     if best_orb:
-        print(">>> LOCKED ON: ", best_orb.name)
         current_orb_target = best_orb
         dodge_offset = Vector2.ZERO 
         _auto_lock_nearest_forward() # Ensure reticle has a target
     else:
-        print("Angel: No valid target found ahead.")
+        pass # No valid target found ahead.
 
 func _update_auto_path():
     if not auto_select_path or is_instance_valid(current_orb_target): return
@@ -444,7 +477,7 @@ func _update_auto_path():
         var diff = orb.global_position - global_position
         var dz = diff.z
         if dz > -min_target_distance: continue 
-        if abs(dz) > scan_distance: continue
+        if abs(dz) > current_max_target_distance: continue
         var forward_dist = abs(dz)
         var lateral_dist = Vector2(diff.x, diff.y).length()
         var score = forward_dist + (lateral_dist * center_bias)
@@ -469,22 +502,17 @@ func decrease_speed(amount: float):
         _trigger_game_over()
 
 func _trigger_game_over():
-    print("Angel: Momentum depleted (0). Stopping Game.")
     is_game_active = false
     velocity = Vector3.ZERO
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-    var generator = get_tree().get_first_node_in_group("level_manager")
-    if generator and generator.has_method("_game_over"):
-        generator._game_over()
+    GameStateEvents.game_over.emit()
 
 func get_speed() -> float: return speed
 func get_max_speed() -> float: return max_speed
 
 func _input(event):
     if is_game_active and event.is_action_pressed("ui_accept"):
-        var generator = get_tree().get_first_node_in_group("level_manager")
-        if generator and generator.has_method("toggle_pause"):
-            generator.toggle_pause()
+        GameStateEvents.toggle_pause_requested.emit()
 
 func _update_keyboard_logic():
     if not is_instance_valid(current_orb_target) or current_orb_target.global_position.z > global_position.z - min_target_distance:
@@ -500,12 +528,11 @@ func _pick_nearest_forward_orb():
         var orb_z = orb.global_position.z
         if orb_z > my_z - 1.0: continue
         var dist = global_position.distance_to(orb.global_position)
-        if dist > scan_distance: continue
+        if dist > current_max_target_distance: continue
         if dist < min_dist:
             min_dist = dist
             best_orb = orb
     if best_orb:
-        print("Angel: Scanner found forward target -> ", best_orb.name)
         current_orb_target = best_orb
         dodge_offset = Vector2.ZERO
         _auto_lock_nearest_forward()

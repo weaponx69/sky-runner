@@ -56,11 +56,11 @@ var spawned_chunks: Array[Node3D] = []
 var chunks_spawned: int = 0
 
 # --- UI VARIABLES ---
-## A reference to the pause menu.
-var pause_menu: Control
-## A reference to the game over label.
-var game_over_label: Label
+@export_group("UI References")
+@export var pause_menu: Control
+@export var game_over_label: Label
 var last_spawned_chunk: Node3D = null
+
 
 ## Called when the node is added to the scene. Initializes the level generator, sets up the UI, and starts the game in a paused state.
 func _ready():
@@ -69,8 +69,6 @@ func _ready():
 
     add_to_group("level_manager")
     randomize()
-
-    _init_ui_references()
 
     # --- SETUP DEBUG LINES ---
     var mesh_instance = MeshInstance3D.new()
@@ -87,7 +85,6 @@ func _ready():
     
     add_child(mesh_instance)
     # -------------------------
-
     player_node = get_tree().get_first_node_in_group("player")
     if not player_node:
         push_error("LevelGenerator: Player node not found!")
@@ -95,13 +92,14 @@ func _ready():
 
     initialize_world()
 
-    # Start in PAUSED state
-    print("Level Generator: Ready. Press Space to Start.")
-    get_tree().paused = true
-    is_game_running = false
-    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+    # Bypass "start paused" for now. Game starts immediately running.
+    get_tree().paused = false
+    is_game_running = true
+    Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+    
+    GameStateEvents.game_over.connect(_game_over)
+    GameStateEvents.toggle_pause_requested.connect(toggle_pause)
 
-    if pause_menu: pause_menu.visible = true
 
 ## Draws green lines between connected orbs to visualize the web.
 func _draw_debug_web():
@@ -123,13 +121,6 @@ func _draw_debug_web():
     debug_draw_imm.surface_end()
 
 
-## Handles unhandled input events for pausing the game.
-#
-# - `event`: The input event to handle.
-func _unhandled_input(event):
-    if event.is_action_pressed("ui_accept"):
-        toggle_pause()
-
 ## Toggles the game's paused state.
 func toggle_pause():
     # 1. Prevent unpausing if the game actually ended (Game Over state)
@@ -137,9 +128,10 @@ func toggle_pause():
         return
 
     # 2. FIRST START FIX: If we are paused and not running, START the game.
-    if not is_game_running and get_tree().paused:
-        start_game()
-        return # RETURN here so we don't run the toggle logic below immediately
+    #    This logic is bypassed as the game starts immediately now.
+    # if not is_game_running and get_tree().paused:
+    #     start_game()
+    #     return # RETURN here so we don't run the toggle logic below immediately
 
     # 3. Standard Toggle (Pause/Unpause during gameplay)
     var is_paused = !get_tree().paused
@@ -148,29 +140,28 @@ func toggle_pause():
     if is_paused:
         # Paused
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-        if pause_menu: pause_menu.visible = true
-        print("Game Paused")
+        if pause_menu:
+            pause_menu.visible = true
     else:
         # Unpaused
-        #Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-        if pause_menu: pause_menu.visible = false
-        print("Game Resumed")
+        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+        if pause_menu:
+            pause_menu.visible = false
 
 ## Starts the game.
 func start_game():
-    print("Game Started!")
     is_game_running = true
     distance = 0.0
 
-    # Unpause and Capture Mouse
     get_tree().paused = false
-    #Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+    Input.mouse_mode = Input.MOUSE_MODE_CAPTURED 
 
     if pause_menu: pause_menu.visible = false
-    if game_over_label: game_over_label.text = ""
+    if game_over_label: 
+        game_over_label.visible = false
+        game_over_label.text = ""
 
-## Called every frame. Updates the game's state, spawns new chunks, and despawns old chunks.
-#
+## Called every frame. Updates the game's state, spawns new chunks, and despawns old chunks.#
 # - `delta`: The time since the last frame.
 func _process(delta):
     # Don't run logic if paused or player missing
@@ -183,8 +174,7 @@ func _process(delta):
 
         # 2. Spawn Check
         if is_instance_valid(last_chunk_end):
-            var dist = player_node.global_position.distance_to(last_chunk_end.global_position)
-            if dist < spawn_trigger_distance:
+            if player_node.global_position.z > last_chunk_end.global_position.z + spawn_trigger_distance:
                 spawn_new_chunk(last_chunk_end.global_position, last_chunk_end.global_transform.basis)
 
         # 3. Despawn old chunks
@@ -193,16 +183,6 @@ func _process(delta):
             if player_node.global_position.z - first.global_position.z > despawn_distance:
                 remove_chunk(first)
 
-# --- UI HELPERS ---
-
-## Initializes the references to the UI elements.
-func _init_ui_references():
-    var root = get_tree().root.get_child(0)
-    if root:
-        pause_menu = root.find_child("PauseMenu", true, false)
-        game_over_label = root.find_child("GameOverLabel", true, false)
-        if not pause_menu:
-            print("LevelGenerator: 'PauseMenu' node not found (UI will not show).")
 
 # --- CHUNK GENERATION ---
 
@@ -231,7 +211,6 @@ func initialize_world():
             if child.is_in_group("orbs"):
                 if is_instance_valid(player_node):
                     player_node.current_orb_target = child
-                    print("Level Generator: Initial target locked -> ", child.name)
                 break
 
 
@@ -308,8 +287,6 @@ func remove_chunk(chunk):
 # - `_orb`: The orb node that was just hit (contains the neighbors data).
 # - `speed_amount`: How much speed to give.
 func _on_orb_collected_bridge(_orb, speed_amount):
-    # DEBUG PRINT
-    print("LevelGen: Signal Received from ", _orb.name)
     
     distance += 50.0
     
@@ -325,8 +302,6 @@ func _on_orb_collected_bridge(_orb, speed_amount):
 ## Ends the game and displays the game over screen.
 func _game_over():
     if not is_game_running: return
-    print("--- GAME ENDED --- Final Distance: ", int(distance))
-
     # Stop Gameplay
     is_game_running = false
     set_process(false)
@@ -335,8 +310,10 @@ func _game_over():
     get_tree().paused = true
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-    if pause_menu: pause_menu.visible = true
+    if pause_menu:
+        pause_menu.visible = false
     if game_over_label:
+        game_over_label.visible = true
         game_over_label.text = "GAME OVER\nDistance: " + str(int(distance))
 
 # --- WIRING LOGIC ---

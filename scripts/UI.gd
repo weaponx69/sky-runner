@@ -22,7 +22,7 @@ func _ready():
     player_node = get_tree().get_first_node_in_group("player")
     
     if is_instance_valid(player_node):
-        print("UI: Found Angel (Player) node")
+
         
         # Configure the speed meter's min and max values based on the player's properties.
         if player_node.has_meta("min_speed") and player_node.has_meta("max_speed"):
@@ -36,7 +36,6 @@ func _ready():
         # Connect to the player's `speed_changed` signal to receive updates.
         if player_node.has_signal("speed_changed"):
             player_node.speed_changed.connect(_on_player_speed_changed)
-            print("UI: Signal connected")
         else:
             push_warning("UI: 'speed_changed' signal not found on the Angel node. UI updates will only occur once.")
             

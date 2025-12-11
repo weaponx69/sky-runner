@@ -14,6 +14,7 @@ signal SHOW_MENU_REQUESTED(
 signal CLOSE_MENU_REQUESTED
 signal MENU_OPEN
 signal MENU_CLOSED
+signal toggle_pause_requested
 #endregion
 
 #region Level Related Signals
@@ -26,6 +27,7 @@ signal LEVEL_VALIDATED
 signal PLAYER_ADDED_TO_LEVEL
 signal LEVEL_ADDED_TO_TREE
 signal LEVEL_REMOVED_FROM_TREE
+signal game_over
 #endregion
 
 #region Transition Related Signals

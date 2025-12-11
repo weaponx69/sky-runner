@@ -26,7 +26,7 @@ version_control/autoload_on_startup=true
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/brennys-game-manager/plugin.cfg", "res://addons/gamedev_assistant/plugin.cfg", "res://addons/gdterm/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")
+enabled=PackedStringArray("res://addons/brennys-game-manager/plugin.cfg", "res://addons/gamedev_assistant/plugin.cfg", "res://addons/gdUnit4/plugin.cfg")
 
 [gdunit4]
 
