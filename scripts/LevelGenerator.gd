@@ -29,9 +29,7 @@ var debug_draw_imm: ImmediateMesh
 
 # --- CHUNK CONFIG ---
 ## The number of chunks to spawn at the beginning of the game.
-@export var initial_chunk_count: int = 4
-## The distance at which chunks are despawned.
-@export var despawn_distance: float = 50.0
+@export var initial_chunk_count: int = 5
 ## The distance at which new chunks are spawned.
 @export var spawn_trigger_distance: float = 100.0
 
@@ -178,14 +176,18 @@ func _process(delta):
                 spawn_new_chunk(last_chunk_end.global_position, last_chunk_end.global_transform.basis)
 
         # 3. Despawn old chunks
-        if spawned_chunks.size() > 0:
-            var first = spawned_chunks[0]
-            if player_node.global_position.z - first.global_position.z > despawn_distance:
-                remove_chunk(first)
+        var current_chunk = get_player_chunk()
+        if is_instance_valid(current_chunk):
+            var current_index = spawned_chunks.find(current_chunk)
+            # We want to keep 1 chunk behind the current one.
+            # Chunks are ordered by spawn time, so older chunks (larger z) are at the front.
+            if current_index > 0:
+                var chunks_to_remove_count = current_index - 1
+                for i in range(chunks_to_remove_count):
+                    remove_chunk(spawned_chunks[0]) # Repeatedly remove the oldest chunk
 
 
 # --- CHUNK GENERATION ---
-
 func initialize_world():
     # Clear old chunks
     for chunk in spawned_chunks: chunk.queue_free()
@@ -212,6 +214,31 @@ func initialize_world():
                 if is_instance_valid(player_node):
                     player_node.current_orb_target = child
                 break
+
+func get_player_chunk() -> Node3D:
+    if not is_instance_valid(player_node): return null
+    
+    # Prioritize orb-based location first
+    if is_instance_valid(player_node.current_orb_target):
+        var chunk = player_node.current_orb_target.get_parent()
+        if chunk in spawned_chunks:
+            return chunk
+            
+    # Fallback: Check player's physical position against all chunk bounds
+    for chunk in spawned_chunks:
+        var chunk_len_variant = chunk.get("spawn_volume_z")
+        if chunk_len_variant == null:
+            continue
+
+        var chunk_len : float = chunk_len_variant
+        var start_z = chunk.global_position.z
+        var end_z = start_z - chunk_len
+        
+        # Check if player is within the Z bounds of this chunk
+        if player_node.global_position.z <= start_z and player_node.global_position.z > end_z:
+            return chunk
+            
+    return null # Player is not in any known chunk
 
 
 ## Spawns a new chunk at a given position and with a given basis.
