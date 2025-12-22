@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3 uid="uid://dxu1e32q0aeep"]
+
+[ext_resource type="Script" uid="uid://dwjy8051vw8of" path="res://test/test_sphere.gd" id="1_41r0o"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cqiqw"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_soqt1"]
+material = SubResource("StandardMaterial3D_cqiqw")
+height = 10.0
+radial_segments = 32
+rings = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_knt54"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_dxeb6"]
+material = SubResource("StandardMaterial3D_knt54")
+
+[node name="TestSphere" type="MeshInstance3D"]
+mesh = SubResource("SphereMesh_soqt1")
+script = ExtResource("1_41r0o")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_dxeb6")

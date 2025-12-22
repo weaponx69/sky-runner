@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dm82f8xuxugdv"]
+
+[ext_resource type="Script" uid="uid://cakqpsuadhqav" path="res://test/test_beam_display.gd" id="1_228yc"]
+
+[node name="Node3D" type="Node3D"]
+script = ExtResource("1_228yc")
