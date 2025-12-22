@@ -1,35 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites id="2025-12-07" name="report_1" tests="3" failures="3" skipped="0" flaky="0" time="0.000">
-	<testsuite id="0" name="test_player_rail_mechanics" package="test" timestamp="2025-12-08T01:17:47" hostname="localhost" tests="3" failures="3" errors="0" skipped="0" flaky="0" time="0.138">
-		<testcase name="test_player_moves_forward_on_rail" classname="test_player_rail_mechanics" time="0.021">
-		</testcase>
-		<testcase name="test_player_converges_to_angled_path" classname="test_player_rail_mechanics" time="0.021">
-		</testcase>
-		<testcase name="test_dodge_offset_keeps_player_off_center" classname="test_player_rail_mechanics" time="0.049">
-			<failure message="FAILED: res://test/test_player_rail_mechanics.gd:74" type="FAILURE">
-<![CDATA[
-Expecting:
- '-0.121542'
- in range between
- '-5.100000' <> '-4.900000'
-]]>
-			</failure>
-			<failure message="FAILED: res://test/test_player_rail_mechanics.gd:74" type="FAILURE">
-<![CDATA[
-Expecting:
- '-0.121542'
- in range between
- '-5.100000' <> '-4.900000'
-]]>
-			</failure>
-			<failure message="FAILED: res://test/test_player_rail_mechanics.gd:74" type="FAILURE">
-<![CDATA[
-Expecting:
- '-0.121542'
- in range between
- '-5.100000' <> '-4.900000'
-]]>
-			</failure>
+<testsuites id="2025-12-15" name="report_1" tests="1" failures="0" skipped="0" flaky="0" time="0.000">
+	<testsuite id="0" name="test_game_logic" package="test" timestamp="2025-12-15T09:30:33" hostname="localhost" tests="1" failures="0" errors="0" skipped="0" flaky="0" time="0.028">
+		<testcase name="test_example" classname="test_game_logic" time="0.013">
 		</testcase>
 	</testsuite>
 </testsuites>

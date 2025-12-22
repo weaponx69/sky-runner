@@ -1,11 +1,15 @@
-[gd_scene load_steps=2 format=3 uid="uid://bgiuihdbo6qhi"]
+[gd_scene load_steps=5 format=3 uid="uid://bgiuihdbo6qhi"]
 
 [ext_resource type="Script" uid="uid://dn38xm2ofqpt8" path="res://scripts/SpaceChunkSpawner.gd" id="1_limms"]
+[ext_resource type="PackedScene" uid="uid://bfydsjdvkyxyc" path="res://scenes/Beam.tscn" id="2_cmqaw"]
+[ext_resource type="PackedScene" uid="uid://bqx4y2uttswik" path="res://scenes/Orb3D.tscn" id="2_y67d8"]
+[ext_resource type="PackedScene" uid="uid://bs2m04sasy368" path="res://scenes/Ghost.tscn" id="3_u6phk"]
 
 [node name="SpaceChunk" type="Node3D"]
-
-[node name="SpaceChunk" type="Node3D" parent="."]
 script = ExtResource("1_limms")
+orb_scene = ExtResource("2_y67d8")
+ghost_scene = ExtResource("3_u6phk")
+beam_scene = ExtResource("2_cmqaw")
 
-[node name="EndAnchor" type="Marker3D" parent="SpaceChunk"]
+[node name="EndAnchor" type="Marker3D" parent="."]
 transform = Transform3D(-0.1736482, 0.9848077, 0, -0.9848077, -0.1736482, 0, 0, 0, 1, 0, 0, -100)

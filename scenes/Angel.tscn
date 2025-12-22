@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://cv7gq0ipmdfww"]
+[gd_scene load_steps=8 format=3 uid="uid://cv7gq0ipmdfww"]
 
 [ext_resource type="Script" uid="uid://dps3km6lfla2h" path="res://scripts/Angel.gd" id="1_cqiqw"]
 [ext_resource type="Script" uid="uid://bfw8sqiparajl" path="res://scripts/SmoothCamera.gd" id="2_nvp8c"]
+[ext_resource type="PackedScene" uid="uid://bfydsjdvkyxyc" path="res://scenes/Beam.tscn" id="3_abcde"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_nvp8c"]
 
@@ -11,29 +12,36 @@ albedo_color = Color(0, 0, 1, 1)
 [sub_resource type="CylinderMesh" id="CylinderMesh_nvp8c"]
 
 [node name="Angel" type="CharacterBody3D" groups=["player"]]
-collision_mask = 1
 script = ExtResource("1_cqiqw")
+beam_scene = ExtResource("3_abcde")
 
+[node name="WallDetector" type="RayCast3D" parent="."]
+target_position = Vector3(0, 0, -5)
 
 [node name="PlayerCollision" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
 shape = SubResource("CapsuleShape3D_nvp8c")
 
-[node name="SpringArm3D" type="SpringArm3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 2, -0.555582)
-spring_length = 6.0
-script = ExtResource("2_nvp8c")
-
-[node name="Camera3D" type="Camera3D" parent="SpringArm3D"]
-transform = Transform3D(-1, 6.18173e-08, -6.18173e-08, 0, 0.707107, 0.707107, 8.74228e-08, 0.707107, -0.707107, 0, 1.80544, -1.81396)
-current = true
-
 [node name="@Node3D@57078" type="Node3D" parent="."]
 
-[node name="ModelPivot" type="Node3D" parent="."]
+[node name="Path3D" type="Path3D" parent="."]
 
-[node name="PlayerMesh" type="MeshInstance3D" parent="ModelPivot"]
+[node name="PathFollow3D" type="PathFollow3D" parent="Path3D"]
+loop = false
+
+[node name="AngelModel" type="Node3D" parent="Path3D/PathFollow3D"]
+
+[node name="PlayerMesh" type="MeshInstance3D" parent="Path3D/PathFollow3D/AngelModel"]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
 material_override = SubResource("StandardMaterial3D_nvp8c")
 mesh = SubResource("CylinderMesh_nvp8c")
-skeleton = NodePath("../..")
+skeleton = NodePath("../../../..")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="Path3D/PathFollow3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, -0.5, 0, 0.5, 0.866025, 0, 2, -0.555582)
+spring_length = 10.0
+script = ExtResource("2_nvp8c")
+
+[node name="Camera3D" type="Camera3D" parent="Path3D/PathFollow3D/SpringArm3D"]
+transform = Transform3D(-1, 6.18173e-08, -6.18173e-08, 0, 0.707107, 0.707107, 8.74228e-08, 0.707107, -0.707107, 0, 1.80544, -1.81396)
+current = true

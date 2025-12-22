@@ -51,8 +51,7 @@ func _physics_process(delta):
     # --- 3. DYNAMIC LOOK AT ---
     # Look slightly ahead of the Angel (down the rail)
     var look_target = target_node.global_position
-    if "velocity" in target_node:
-        look_target += Vector3(0, 0, -20.0) 
+    look_target += Vector3(0, 0, -20.0) # Always look ahead 20 units
         
     # Smooth rotation towards the look target
     var current_transform = global_transform

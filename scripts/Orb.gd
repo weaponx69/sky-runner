@@ -2,10 +2,14 @@
 #
 # This script is attached to an `Area3D` node that represents an orb.
 # It adds the orb to the "orbs" group and sets up an animation to make it rotate and pulsate.
-extends Area3D
+extends "res://scripts/PathNode.gd"
 
 ## Called when the node is added to the scene. Sets up the orb's animation.
 func _ready():
+	# Set base properties from PathNode
+	is_collectible = true
+	momentum_value = 10.0
+
 	# Add to orbs group
 	add_to_group("orbs")
 
